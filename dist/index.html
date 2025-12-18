@@ -2,635 +2,778 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M&J Ultimate App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M&J Ultimate Pro</title>
+    <!-- Icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Police Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #007bff;
-            --dark: #121212;
-            --card-bg: #1e1e1e;
-            --light: #ffffff;
-            --gray: #2c2c2c;
-            --text-gray: #a0a0a0;
+            --primary: #FF0050; /* Couleur TikTok/Modern */
+            --secondary: #00F2EA;
+            --bg-dark: #121212;
+            --bg-card: #1E1E1E;
+            --text-main: #FFFFFF;
+            --text-muted: #B0B0B0;
             --nav-height: 60px;
+            --header-height: 60px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        body { background-color: var(--dark); color: var(--light); padding-bottom: var(--nav-height); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden; /* Pour gérer le scroll par section */
+        }
+
+        /* --- UTILITAIRES --- */
+        .hidden { display: none !important; }
+        .btn {
+            background: linear-gradient(45deg, var(--primary), #d60045);
+            color: white; border: none; padding: 12px 20px; border-radius: 8px;
+            font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%; border-top: 3px solid var(--primary);
+            width: 24px; height: 24px; animation: spin 1s linear infinite;
+            margin: 20px auto; display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* --- NAVIGATION --- */
+        .app-view {
+            height: 100%; padding-bottom: var(--nav-height);
+            display: none; flex-direction: column;
+        }
+        .app-view.active { display: flex; }
+
         .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; height: var(--nav-height);
-            background: var(--dark); border-top: 1px solid var(--gray);
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid #333; display: flex; justify-content: space-around;
+            align-items: center; z-index: 1000;
         }
-        .nav-item { color: var(--text-gray); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
-        .nav-item:active { transform: scale(0.9); }
-        .nav-item.active { color: var(--primary); }
-
-        /* --- SECTIONS (Vues) --- */
-        .section { display: none; padding: 20px; min-height: 100vh; animation: fadeIn 0.3s ease; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- AUTH FORMS --- */
-        .auth-container { max-width: 400px; margin: 50px auto; text-align: center; }
-        h1 { margin-bottom: 20px; color: var(--primary); }
-        input, textarea {
-            width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
-            border: 1px solid var(--gray); background: var(--gray); color: white; outline: none;
+        .nav-item {
+            color: var(--text-muted); font-size: 1.4rem; padding: 10px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            cursor: pointer; transition: 0.2s;
         }
-        input:focus { border-color: var(--primary); }
-        button {
-            width: 100%; padding: 12px; background: var(--primary); color: white;
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
-            transition: 0.2s;
-        }
-        button:hover { opacity: 0.9; }
-        .link { color: var(--primary); cursor: pointer; margin-top: 15px; display: block; font-size: 0.9rem; }
+        .nav-item span { font-size: 0.6rem; }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
 
-        /* --- FEED VIDEO --- */
+        /* --- AUTHENTIFICATION --- */
+        .auth-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 2000;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .auth-card {
+            width: 100%; max-width: 400px; background: var(--bg-card);
+            padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .auth-input {
+            width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #333;
+            border-radius: 8px; color: white; margin-bottom: 15px; outline: none;
+        }
+        .auth-input:focus { border-color: var(--primary); }
+        .auth-switch { text-align: center; margin-top: 15px; font-size: 0.9rem; color: var(--text-muted); }
+        .auth-switch a { color: var(--primary); text-decoration: none; cursor: pointer; }
+
+        /* --- HEADER GÉNÉRAL --- */
+        .top-header {
+            height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; background: var(--bg-dark); border-bottom: 1px solid #333;
+            font-weight: 700; font-size: 1.2rem;
+        }
+
+        /* --- SECTIONS DE CONTENU --- */
+        .scroll-content {
+            flex: 1; overflow-y: auto; padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* FEED VIDÉO */
         .video-card {
-            background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: var(--bg-card); border-radius: 12px; overflow: hidden; margin-bottom: 20px;
         }
-        .video-player { width: 100%; max-height: 500px; background: black; display: block; }
-        .video-info { padding: 15px; }
-        .user-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
-        .stats { display: flex; gap: 15px; margin-top: 10px; color: var(--text-gray); font-size: 0.9rem; }
-        .stats i { color: var(--primary); margin-right: 5px; }
-
-        /* --- CHAT --- */
-        .chat-list-item {
-            display: flex; align-items: center; gap: 15px; padding: 15px;
-            border-bottom: 1px solid var(--gray); cursor: pointer; transition: background 0.2s;
-        }
-        .chat-list-item:hover { background: var(--gray); }
-        .message-area {
-            height: calc(100vh - 140px); overflow-y: auto; padding: 10px; padding-bottom: 20px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
-        .msg.sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .msg.received { align-self: flex-start; background: var(--gray); color: white; border-bottom-left-radius: 2px; }
-        .chat-input-area {
-            position: fixed; bottom: var(--nav-height); left: 0; width: 100%;
-            padding: 10px; background: var(--card-bg); display: flex; gap: 10px; align-items: center;
-            border-top: 1px solid var(--gray);
-        }
-
-        /* --- PROFIL --- */
-        .profile-header { text-align: center; margin-bottom: 30px; background: var(--card-bg); padding: 30px; border-radius: 0 0 20px 20px; }
-        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--primary); }
-        .profile-stats { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
-        .stat-box { text-align: center; }
-        .stat-num { font-weight: bold; font-size: 1.2rem; display: block; }
-        .stat-label { font-size: 0.8rem; color: var(--text-gray); }
-
-        /* --- TOAST NOTIFICATION --- */
-        #toast {
-            position: fixed; top: 20px; right: 20px; background: var(--primary); color: white;
-            padding: 15px 25px; border-radius: 50px; z-index: 2000; display: none;
-            box-shadow: 0 4px 10px rgba(0,123,255,0.4); animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .video-player { width: 100%; aspect-ratio: 9/16; background: #000; display: block; max-height: 500px; object-fit: contain; }
+        .video-info { padding: 12px; }
+        .video-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .user-avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; }
+        .video-actions { display: flex; gap: 15px; margin-top: 10px; color: var(--text-muted); font-size: 0.9rem; }
         
-        /* --- UPLOAD AREA --- */
-        .upload-zone {
-            border: 2px dashed var(--gray); padding: 40px; text-align: center; 
-            margin-bottom: 20px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+        /* UPLOAD */
+        .upload-area {
+            border: 2px dashed #444; border-radius: 15px; padding: 40px 20px;
+            text-align: center; margin-bottom: 20px; transition: 0.3s; cursor: pointer;
         }
-        .upload-zone:hover { border-color: var(--primary); background: rgba(0,123,255,0.05); }
+        .upload-area.dragover { border-color: var(--primary); background: rgba(255, 0, 80, 0.1); }
+        .preview-video { width: 100%; border-radius: 10px; margin-top: 10px; display: none; }
+
+        /* CHAT */
+        .chat-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            border-bottom: 1px solid #333; cursor: pointer;
+        }
+        .chat-item:active { background: #252525; }
+        .chat-content { flex: 1; overflow: hidden; }
+        .last-msg { color: var(--text-muted); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unread-badge {
+            background: var(--primary); color: white; border-radius: 10px;
+            padding: 2px 6px; font-size: 0.7rem; font-weight: bold;
+        }
+
+        /* SALLE DE CHAT */
+        .chat-room {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 1500; display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.3s ease-out;
+        }
+        .chat-room.open { transform: translateX(0); }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+        .msg.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .msg.other { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 4px; }
+        .chat-input-bar {
+            padding: 10px; background: #1E1E1E; border-top: 1px solid #333;
+            display: flex; gap: 10px; align-items: center;
+        }
+        .chat-input {
+            flex: 1; background: #333; border: none; padding: 10px 15px;
+            border-radius: 20px; color: white; outline: none;
+        }
+
+        /* PROFIL */
+        .profile-header { text-align: center; padding: 30px 20px; background: var(--bg-card); border-radius: 0 0 20px 20px; }
+        .profile-pic { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin-bottom: 10px; object-fit: cover; }
+        .stats-row { display: flex; justify-content: center; gap: 20px; margin-top: 15px; }
+        .stat-item { text-align: center; }
+        .stat-num { font-weight: 700; font-size: 1.1rem; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* TOAST NOTIF */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; width: 90%; max-width: 350px; }
+        .toast {
+            background: #333; color: white; padding: 12px 16px; border-radius: 8px;
+            margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: space-between;
+            animation: slideDown 0.3s; border-left: 4px solid var(--primary);
+        }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     </style>
 </head>
 <body>
 
-    <div id="toast">Notification</div>
+    <!-- NOTIFICATIONS -->
+    <div id="toast-container"></div>
 
-    <div id="auth-section" class="section active">
-        <div class="auth-container">
-            <h1>M&J Ultimate</h1>
-            <p style="color: var(--text-gray);">Bienvenue sur votre plateforme</p>
-            <p style="font-size: 0.8rem; color: orange; margin-bottom: 20px;">
-                Note : Si le serveur "dort", la première connexion peut prendre 1 minute.
-            </p>
+    <!-- AUTHENTIFICATION -->
+    <div id="auth-view" class="auth-wrapper">
+        <div class="auth-card">
+            <h2 style="text-align: center; margin-bottom: 10px; color: var(--primary);">M&J Ultimate</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Bienvenue sur la plateforme</p>
             
+            <!-- Login Form -->
             <form id="login-form">
-                <input type="text" id="login-username" placeholder="Nom d'utilisateur" required>
-                <input type="password" id="login-password" placeholder="Mot de passe" required>
-                <button type="submit">Se connecter</button>
+                <input type="text" class="auth-input" id="login-user" placeholder="Nom d'utilisateur" required>
+                <input type="password" class="auth-input" id="login-pass" placeholder="Mot de passe" required>
+                <button type="submit" class="btn" id="login-btn">Se connecter</button>
+                <div class="loader" id="login-loader"></div>
             </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="hidden">
+                <input type="text" class="auth-input" id="reg-user" placeholder="Choisir un pseudo" required>
+                <input type="email" class="auth-input" id="reg-email" placeholder="Email (optionnel)">
+                <input type="password" class="auth-input" id="reg-pass" placeholder="Mot de passe (6+ chars)" required>
+                <button type="submit" class="btn" id="reg-btn">Créer un compte</button>
+                <div class="loader" id="reg-loader"></div>
+            </form>
+
+            <div class="auth-switch">
+                <span id="to-register">Pas de compte ? <a>S'inscrire</a></span>
+                <span id="to-login" class="hidden">Déjà un compte ? <a>Se connecter</a></span>
+            </div>
             
-            <span class="link" onclick="toggleAuth('register')">Pas de compte ? Créer un compte</span>
+            <p style="text-align:center; font-size:0.75rem; color:#555; margin-top:20px;">
+                Note: Le serveur gratuit peut prendre 1min à démarrer.
+            </p>
         </div>
     </div>
 
-    <div id="register-section" class="section">
-        <div class="auth-container">
-            <h1>Inscription</h1>
-            <form id="register-form">
-                <input type="text" id="reg-username" placeholder="Nom d'utilisateur (a-z, 0-9)" required>
-                <input type="email" id="reg-email" placeholder="Email (optionnel)">
-                <input type="password" id="reg-password" placeholder="Mot de passe (min 6 chars)" required>
-                <button type="submit">S'inscrire</button>
-            </form>
-            <span class="link" onclick="toggleAuth('login')">Déjà un compte ? Se connecter</span>
+    <!-- APPLICATION PRINCIPALE -->
+    
+    <!-- 1. FEED -->
+    <div id="view-home" class="app-view">
+        <div class="top-header">
+            <span>M&J Feed</span>
+            <i class="fas fa-bell"></i>
         </div>
-    </div>
-
-    <div id="app-container" style="display: none;">
-        
-        <div id="home-section" class="section">
-            <h2 style="margin-bottom: 15px;">Explorer</h2>
-            <div id="video-feed">
-                <p style="text-align:center; color: var(--text-gray); margin-top:50px;">Chargement du flux...</p>
+        <div class="scroll-content" id="feed-container">
+            <div style="text-align:center; margin-top:50px; color:var(--text-muted);">
+                <div class="loader" style="display:block;"></div>
+                Chargement des vidéos...
             </div>
         </div>
+    </div>
 
-        <div id="search-section" class="section">
-            <h2 style="margin-bottom: 15px;">Recherche</h2>
-            <input type="text" id="search-input" placeholder="Chercher un utilisateur..." onkeyup="searchUsers()">
-            <div id="search-results" style="margin-top: 20px;"></div>
+    <!-- 2. RECHERCHE -->
+    <div id="view-search" class="app-view">
+        <div class="top-header">Recherche</div>
+        <div class="scroll-content">
+            <input type="text" id="search-input" class="auth-input" placeholder="Chercher un utilisateur..." style="margin-bottom:20px;">
+            <div id="search-results"></div>
         </div>
+    </div>
 
-        <div id="upload-section" class="section">
-            <h2 style="margin-bottom: 15px;">Publier</h2>
+    <!-- 3. UPLOAD -->
+    <div id="view-upload" class="app-view">
+        <div class="top-header">Publier</div>
+        <div class="scroll-content">
             <form id="upload-form">
-                <div class="upload-zone" onclick="document.getElementById('video-file').click()">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary);"></i>
-                    <p style="margin-top: 10px;">Cliquez pour choisir une vidéo</p>
-                    <input type="file" id="video-file" accept="video/*" required style="display: none;">
-                    <p id="file-name" style="margin-top: 10px; color: var(--primary); font-weight: bold;"></p>
+                <div class="upload-area" id="drop-zone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-muted);"></i>
+                    <p style="margin-top:10px;">Touchez pour choisir une vidéo</p>
+                    <input type="file" id="video-file" accept="video/*" hidden>
+                    <video id="preview" class="preview-video" controls></video>
                 </div>
-                <textarea id="video-desc" rows="3" placeholder="Description de votre vidéo..."></textarea>
-                <button type="submit" id="upload-btn">Publier la vidéo</button>
+                
+                <textarea class="auth-input" id="video-desc" rows="3" placeholder="Ajouter une description..."></textarea>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <span>Public</span>
+                    <input type="checkbox" id="is-public" checked style="transform: scale(1.5);">
+                </div>
+
+                <button type="submit" class="btn" id="upload-btn">Publier</button>
+                <div class="loader" id="upload-loader"></div>
+                <p id="upload-status" style="text-align:center; margin-top:10px; font-size:0.9rem; color:var(--text-muted);"></p>
             </form>
         </div>
+    </div>
 
-        <div id="chat-list-section" class="section">
-            <h2 style="margin-bottom: 15px;">Messages</h2>
-            <div id="conversations-list"></div>
+    <!-- 4. CHAT LIST -->
+    <div id="view-chat" class="app-view">
+        <div class="top-header">Messages</div>
+        <div class="scroll-content" id="conversations-list">
+            <!-- Liste générée par JS -->
         </div>
+    </div>
 
-        <div id="chat-room-section" class="section" style="padding: 0; padding-bottom: 70px;">
-            <div style="background: var(--card-bg); padding: 15px; display: flex; align-items: center; position: sticky; top: 0; border-bottom: 1px solid var(--gray);">
-                <button onclick="showSection('chat-list-section')" style="width: auto; padding: 5px 15px; margin: 0; margin-right: 15px; background: transparent;"><i class="fas fa-arrow-left"></i></button>
-                <h3 id="chat-with-username" style="margin: 0;">Chat</h3>
-                <div id="online-indicator" style="width: 10px; height: 10px; background: #4CAF50; border-radius: 50%; margin-left: 10px; display:none;"></div>
+    <!-- 5. PROFIL -->
+    <div id="view-profile" class="app-view">
+        <div class="scroll-content" style="padding:0;">
+            <div id="profile-content">
+                <!-- Rempli par JS -->
             </div>
-            
-            <div id="messages-container" class="message-area"></div>
-            
-            <div class="chat-input-area">
-                <input type="text" id="msg-input" placeholder="Votre message..." style="margin: 0; border-radius: 20px;">
-                <button onclick="sendMessage()" style="width: 50px; height: 50px; border-radius: 50%; margin: 0; padding: 0;"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-
-        <div id="profile-section" class="section" style="padding: 0;">
-            <div id="profile-content"></div>
-            <div style="padding: 20px;">
-                <button onclick="logout()" style="background: #dc3545;">Déconnexion</button>
+            <div style="padding:20px;">
+                <button onclick="logout()" class="btn" style="background: #333; margin-top:20px;">Déconnexion</button>
             </div>
         </div>
+    </div>
 
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="showSection('home-section')"><i class="fas fa-home"></i></div>
-            <div class="nav-item" onclick="showSection('search-section')"><i class="fas fa-search"></i></div>
-            <div class="nav-item" onclick="showSection('upload-section')"><i class="fas fa-plus-circle" style="font-size: 2rem;"></i></div>
-            <div class="nav-item" onclick="showSection('chat-list-section')"><i class="fas fa-comment-dots"></i></div>
-            <div class="nav-item" onclick="showSection('profile-section')"><i class="fas fa-user"></i></div>
+    <!-- NAVIGATION BAR -->
+    <div class="bottom-nav" id="main-nav" style="display:none;">
+        <div class="nav-item active" onclick="navTo('home')">
+            <i class="fas fa-home"></i> <span>Feed</span>
+        </div>
+        <div class="nav-item" onclick="navTo('search')">
+            <i class="fas fa-search"></i> <span>Search</span>
+        </div>
+        <div class="nav-item" onclick="navTo('upload')">
+            <i class="fas fa-plus-circle" style="font-size:2rem; color:white; transform: translateY(-5px);"></i>
+        </div>
+        <div class="nav-item" onclick="navTo('chat')">
+            <i class="fas fa-comment-dots"></i> <span>Chat</span>
+        </div>
+        <div class="nav-item" onclick="navTo('profile')">
+            <i class="fas fa-user"></i> <span>Profil</span>
+        </div>
+    </div>
+
+    <!-- SALLE DE CHAT (Overlay) -->
+    <div id="chat-room" class="chat-room">
+        <div class="top-header" style="background: var(--bg-card);">
+            <i class="fas fa-arrow-left" onclick="closeChat()" style="cursor:pointer; padding:10px;"></i>
+            <span id="chat-user-name" style="margin-left:10px;">Utilisateur</span>
+            <div id="online-dot" style="width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-left:auto; display:none;"></div>
+        </div>
+        
+        <div id="messages-container" class="chat-messages"></div>
+        
+        <div class="chat-input-bar">
+            <input type="text" id="msg-input" class="chat-input" placeholder="Votre message...">
+            <button onclick="sendMsg()" style="background:var(--primary); color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
     <script>
-        // ================== CONFIGURATION SERVEUR ==================
-        // Connexion au serveur distant sur Render
+        // ================= CONFIGURATION =================
         const API_URL = "https://mj-hub.onrender.com"; 
-        
-        // WebSocket sécurisé (WSS) obligatoire pour HTTPS
         const WS_URL = "wss://mj-hub.onrender.com/ws";
-        // ===========================================================
-        
-        let token = localStorage.getItem('token');
-        let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        let currentChatUserId = null;
-        let socket = null;
+        // ===============================================
 
-        // INIT
-        if (token) {
-            initApp();
+        // État Global
+        let state = {
+            token: localStorage.getItem('mj_token'),
+            user: JSON.parse(localStorage.getItem('mj_user') || '{}'),
+            currentChatId: null,
+            socket: null
+        };
+
+        // --- DOM Elements ---
+        const views = {
+            home: document.getElementById('view-home'),
+            search: document.getElementById('view-search'),
+            upload: document.getElementById('view-upload'),
+            chat: document.getElementById('view-chat'),
+            profile: document.getElementById('view-profile')
+        };
+        const navItems = document.querySelectorAll('.nav-item');
+
+        // --- INITIALISATION ---
+        function init() {
+            if (state.token) {
+                document.getElementById('auth-view').classList.add('hidden');
+                document.getElementById('main-nav').style.display = 'flex';
+                navTo('home');
+                connectWS();
+                loadProfile(); // Pré-charger le profil
+            } else {
+                document.getElementById('auth-view').classList.remove('hidden');
+            }
         }
+
+        // --- NAVIGATION ---
+        window.navTo = function(viewName) {
+            // Masquer toutes les vues
+            Object.values(views).forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            // Afficher la vue demandée
+            if(views[viewName]) views[viewName].classList.add('active');
+            
+            // Highlight icone
+            const indexMap = { 'home': 0, 'search': 1, 'upload': 2, 'chat': 3, 'profile': 4 };
+            if(navItems[indexMap[viewName]]) navItems[indexMap[viewName]].classList.add('active');
+
+            // Charger les données spécifiques
+            if(viewName === 'home') loadFeed();
+            if(viewName === 'chat') loadConversations();
+            if(viewName === 'profile') loadProfile();
+        };
 
         // --- AUTHENTIFICATION ---
+        const toggleAuth = (to) => {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const toRegBtn = document.getElementById('to-register');
+            const toLogBtn = document.getElementById('to-login');
 
-        function toggleAuth(view) {
-            document.getElementById('auth-section').style.display = view === 'login' ? 'block' : 'none';
-            document.getElementById('register-section').style.display = view === 'register' ? 'block' : 'none';
-        }
+            if (to === 'register') {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                toRegBtn.classList.add('hidden');
+                toLogBtn.classList.remove('hidden');
+            } else {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                toRegBtn.classList.remove('hidden');
+                toLogBtn.classList.add('hidden');
+            }
+        };
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('to-register').onclick = () => toggleAuth('register');
+        document.getElementById('to-login').onclick = () => toggleAuth('login');
+
+        document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "Connexion en cours...";
-            btn.disabled = true;
+            const btn = document.getElementById('login-btn');
+            const loader = document.getElementById('login-loader');
             
+            btn.classList.add('hidden');
+            loader.style.display = 'block';
+
             const formData = new FormData();
-            formData.append('username', document.getElementById('login-username').value);
-            formData.append('password', document.getElementById('login-password').value);
+            formData.append('username', document.getElementById('login-user').value);
+            formData.append('password', document.getElementById('login-pass').value);
 
             try {
                 const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
-                if (!res.ok) throw new Error('Identifiants incorrects ou serveur indisponible');
+                if (!res.ok) throw new Error('Identifiants incorrects');
+                
                 const data = await res.json();
+                state.token = data.access_token;
+                state.user = { id: data.user_id, username: data.username, avatar: data.avatar_url };
                 
-                token = data.access_token;
-                currentUser = { id: data.user_id, username: data.username, avatar_url: data.avatar_url };
+                localStorage.setItem('mj_token', state.token);
+                localStorage.setItem('mj_user', JSON.stringify(state.user));
                 
-                localStorage.setItem('token', token);
-                localStorage.setItem('user', JSON.stringify(currentUser));
-                
-                initApp();
+                init();
             } catch (err) {
-                showToast(err.message, true);
+                showToast(err.message, 'error');
+                btn.classList.remove('hidden');
             } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                loader.style.display = 'none';
             }
-        });
+        };
 
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
+        document.getElementById('register-form').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.innerText = "Création...";
-            btn.disabled = true;
+            const btn = document.getElementById('reg-btn');
+            const loader = document.getElementById('reg-loader');
+            
+            btn.classList.add('hidden');
+            loader.style.display = 'block';
 
-            const data = {
-                username: document.getElementById('reg-username').value,
-                password: document.getElementById('reg-password').value,
-                email: document.getElementById('reg-email').value || null
+            const payload = {
+                username: document.getElementById('reg-user').value,
+                email: document.getElementById('reg-email').value || null,
+                password: document.getElementById('reg-pass').value
             };
 
             try {
                 const res = await fetch(`${API_URL}/api/users/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
+                
                 if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || "Erreur inscription");
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail || 'Erreur inscription');
                 }
-                showToast("Compte créé ! Connectez-vous.");
+                
+                showToast('Compte créé ! Connectez-vous.', 'success');
                 toggleAuth('login');
             } catch (err) {
-                showToast(err.message, true);
+                showToast(err.message, 'error');
             } finally {
-                btn.innerText = "S'inscrire";
-                btn.disabled = false;
+                btn.classList.remove('hidden');
+                loader.style.display = 'none';
             }
-        });
+        };
 
-        function logout() {
+        window.logout = function() {
             localStorage.clear();
-            if(socket) socket.close();
+            if(state.socket) state.socket.close();
             location.reload();
-        }
+        };
 
-        function initApp() {
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('register-section').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-            connectWebSocket();
-            loadFeed();
-            loadProfile();
-        }
-
-        // --- NAVIGATION ---
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            
-            // Highlight nav icons
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const map = {
-                'home-section': 0, 'search-section': 1, 'upload-section': 2,
-                'chat-list-section': 3, 'profile-section': 4, 'chat-room-section': 3
-            };
-            if(map[id] !== undefined) document.querySelectorAll('.nav-item')[map[id]].classList.add('active');
-            
-            if (id === 'home-section') loadFeed();
-            if (id === 'chat-list-section') loadConversations();
-            if (id === 'profile-section') loadProfile();
-        }
-
-        // --- WEBSOCKET & NOTIFICATIONS ---
-        function connectWebSocket() {
-            if (!currentUser.id) return;
-            
-            // On ferme l'ancienne connexion si elle existe
-            if(socket && socket.readyState !== WebSocket.CLOSED) {
-                return;
-            }
-
-            console.log(`Tentative de connexion WS à ${WS_URL}/${currentUser.id}`);
-            socket = new WebSocket(`${WS_URL}/${currentUser.id}`);
-            
-            socket.onopen = () => console.log("WS Connecté");
-            
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                
-                if (data.type === 'new_message') {
-                    if (currentChatUserId === data.sender_id && document.getElementById('chat-room-section').classList.contains('active')) {
-                        appendMessage(data, 'received');
-                    } else {
-                        showToast(`Nouveau message de ${data.sender_username}`);
-                    }
-                }
-            };
-            
-            socket.onerror = (error) => {
-                console.error("Erreur WebSocket", error);
-            };
-
-            socket.onclose = () => {
-                console.log("WS Deconnecté, reconnexion dans 5s...");
-                setTimeout(connectWebSocket, 5000); 
-            };
-        }
-
-        function showToast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.backgroundColor = isError ? '#dc3545' : 'var(--primary)';
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
-
-        // --- FEED & VIDEOS ---
+        // --- FEED ---
         async function loadFeed() {
+            const container = document.getElementById('feed-container');
+            
             try {
                 const res = await fetch(`${API_URL}/api/feed`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${state.token}` }
                 });
-                if (!res.ok) throw new Error("Erreur chargement feed");
                 
+                if (!res.ok) throw new Error('Erreur chargement');
                 const videos = await res.json();
-                const container = document.getElementById('video-feed');
                 
-                if(videos.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">Aucune vidéo pour le moment.</p>';
+                container.innerHTML = '';
+                if (videos.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; margin-top:50px; color:gray;">Aucune vidéo. Soyez le premier !</div>';
                     return;
                 }
 
-                container.innerHTML = '';
                 videos.forEach(v => {
-                    const div = document.createElement('div');
-                    div.className = 'video-card';
-                    div.innerHTML = `
-                        <div class="user-head" style="padding:10px;">
-                            <img src="${v.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
-                            <b>${v.username}</b>
-                            <span style="margin-left:auto; font-size:0.8rem; color:gray;">${new Date(v.created_at).toLocaleDateString()}</span>
+                    const card = document.createElement('div');
+                    card.className = 'video-card';
+                    card.innerHTML = `
+                        <div class="video-info video-header">
+                            <img src="${v.avatar_url || 'https://ui-avatars.com/api/?name='+v.username}" class="user-avatar-sm">
+                            <span style="font-weight:600;">${v.username}</span>
+                            <span style="font-size:0.8rem; color:gray; margin-left:auto;">${new Date(v.created_at).toLocaleDateString()}</span>
                         </div>
-                        <video src="${v.video_url}" class="video-player" controls preload="metadata"></video>
+                        <video src="${v.video_url}" class="video-player" controls loop playsinline></video>
                         <div class="video-info">
-                            <p>${v.description}</p>
-                            <div class="stats">
+                            <p>${v.description || ''}</p>
+                            <div class="video-actions">
                                 <span><i class="fas fa-heart"></i> ${v.likes}</span>
                                 <span><i class="fas fa-eye"></i> ${v.views}</span>
                             </div>
                         </div>
                     `;
-                    container.appendChild(div);
+                    container.appendChild(card);
                 });
-            } catch (e) {
-                console.error(e);
-                document.getElementById('video-feed').innerHTML = '<p style="text-align:center; color:red;">Erreur de connexion au serveur.</p>';
+            } catch (err) {
+                container.innerHTML = '<div style="text-align:center; margin-top:20px; color:red;">Erreur serveur. Réessayez.</div>';
             }
         }
 
         // --- UPLOAD ---
-        document.getElementById('video-file').addEventListener('change', function() {
-            const fileName = this.files[0] ? this.files[0].name : '';
-            document.getElementById('file-name').innerText = fileName;
-        });
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('video-file');
+        const preview = document.getElementById('preview');
 
-        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        dropZone.onclick = () => fileInput.click();
+        
+        fileInput.onchange = function() {
+            const file = this.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                preview.src = url;
+                preview.style.display = 'block';
+                dropZone.querySelector('p').innerText = file.name;
+                dropZone.querySelector('i').style.display = 'none';
+            }
+        };
+
+        document.getElementById('upload-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('upload-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "Envoi vers Cloudinary...";
-            btn.disabled = true;
+            const loader = document.getElementById('upload-loader');
+            const status = document.getElementById('upload-status');
+            
+            if(!fileInput.files[0]) return showToast('Sélectionnez une vidéo', 'error');
+
+            btn.classList.add('hidden');
+            loader.style.display = 'block';
+            status.innerText = "Upload en cours (ne fermez pas)...";
 
             const formData = new FormData();
-            const fileInput = document.getElementById('video-file');
-            
-            if(fileInput.files.length === 0) {
-                showToast("Veuillez sélectionner une vidéo", true);
-                btn.disabled = false; btn.innerText = originalText;
-                return;
-            }
-
             formData.append('video', fileInput.files[0]);
             formData.append('description', document.getElementById('video-desc').value);
+            formData.append('is_public', document.getElementById('is-public').checked);
 
             try {
                 const res = await fetch(`${API_URL}/api/videos/upload`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
+                    headers: { 'Authorization': `Bearer ${state.token}` },
                     body: formData
                 });
+                
                 if (!res.ok) {
-                    const errData = await res.json();
-                    throw new Error(errData.detail || "Erreur upload");
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Erreur upload');
                 }
-                showToast("Vidéo publiée avec succès !");
+
+                showToast('Vidéo publiée !', 'success');
+                // Reset form
                 document.getElementById('upload-form').reset();
-                document.getElementById('file-name').innerText = "";
-                showSection('home-section');
+                preview.style.display = 'none';
+                dropZone.querySelector('i').style.display = 'block';
+                dropZone.querySelector('p').innerText = 'Touchez pour choisir une vidéo';
+                status.innerText = "";
+                navTo('home');
+
             } catch (err) {
-                showToast(err.message, true);
+                showToast(err.message, 'error');
+                status.innerText = "Échec de l'upload.";
             } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.classList.remove('hidden');
+                loader.style.display = 'none';
             }
-        });
+        };
+
+        // --- RECHERCHE ---
+        let searchTimeout;
+        document.getElementById('search-input').onkeyup = function() {
+            clearTimeout(searchTimeout);
+            const val = this.value;
+            if (val.length < 2) return;
+            
+            searchTimeout = setTimeout(async () => {
+                const res = await fetch(`${API_URL}/api/search?q=${val}&type=users`, {
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                const users = await res.json();
+                const container = document.getElementById('search-results');
+                container.innerHTML = '';
+                
+                users.forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.innerHTML = `
+                        <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.username}" class="user-avatar-sm" style="width:40px; height:40px;">
+                        <span style="font-weight:600; flex:1;">${u.username}</span>
+                        <i class="fas fa-comment" style="color:var(--primary);"></i>
+                    `;
+                    div.onclick = () => openChat(u.id, u.username);
+                    container.appendChild(div);
+                });
+            }, 500);
+        };
 
         // --- CHAT ---
         async function loadConversations() {
+            const list = document.getElementById('conversations-list');
             const res = await fetch(`${API_URL}/api/messages/conversations`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${state.token}` }
             });
             const convs = await res.json();
-            const list = document.getElementById('conversations-list');
+            
             list.innerHTML = '';
-
-            if(convs.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:gray;">Aucune conversation. Utilisez la recherche.</p>';
-            }
-
+            if(convs.length === 0) list.innerHTML = '<div style="padding:20px; text-align:center; color:gray;">Aucune conversation</div>';
+            
             convs.forEach(c => {
                 const div = document.createElement('div');
-                div.className = 'chat-list-item';
+                div.className = 'chat-item';
                 div.innerHTML = `
-                    <img src="${c.avatar_url || 'https://via.placeholder.com/50'}" class="avatar">
-                    <div style="flex:1;">
+                    <img src="${c.avatar_url || 'https://ui-avatars.com/api/?name='+c.username}" class="user-avatar-sm" style="width:45px; height:45px;">
+                    <div class="chat-content">
                         <div style="display:flex; justify-content:space-between;">
-                            <b>${c.username}</b>
-                            <small style="color:gray;">${new Date(c.last_message_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                            <span style="font-weight:600;">${c.username}</span>
+                            ${c.is_online ? '<span style="color:#4CAF50; font-size:0.7rem;">●</span>' : ''}
                         </div>
-                        <p style="color:var(--text-gray); font-size:0.9rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:200px;">
-                            ${c.last_message || '...'}
-                        </p>
+                        <div class="last-msg">${c.last_message || 'Image/Vidéo'}</div>
                     </div>
-                    ${c.unread_count > 0 ? `<span style="background:var(--primary); border-radius:50%; min-width:20px; height:20px; text-align:center; font-size:12px; line-height:20px;">${c.unread_count}</span>` : ''}
+                    ${c.unread_count > 0 ? `<div class="unread-badge">${c.unread_count}</div>` : ''}
                 `;
-                div.onclick = () => openChat(c.user_id, c.username, c.is_online);
+                div.onclick = () => openChat(c.user_id, c.username);
                 list.appendChild(div);
             });
         }
 
-        async function openChat(userId, username, isOnline) {
-            currentChatUserId = userId;
-            document.getElementById('chat-with-username').innerText = username;
-            
-            const indicator = document.getElementById('online-indicator');
-            indicator.style.display = isOnline ? 'block' : 'none';
-            
-            showSection('chat-room-section');
+        window.openChat = async function(userId, username) {
+            state.currentChatId = userId;
+            document.getElementById('chat-user-name').innerText = username;
+            document.getElementById('chat-room').classList.add('open');
+            document.getElementById('messages-container').innerHTML = '<div class="loader" style="display:block"></div>';
             
             const res = await fetch(`${API_URL}/api/messages/${userId}?limit=50`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${state.token}` }
             });
             const msgs = await res.json();
             
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
             
-            msgs.forEach(m => {
-                appendMessage(m, m.sender_id === currentUser.id ? 'sent' : 'received');
-            });
+            msgs.forEach(m => appendMsg(m));
             scrollToBottom();
-        }
+        };
 
-        function appendMessage(msg, type) {
+        window.closeChat = function() {
+            document.getElementById('chat-room').classList.remove('open');
+            state.currentChatId = null;
+            if(views.chat.classList.contains('active')) loadConversations();
+        };
+
+        function appendMsg(msg) {
             const container = document.getElementById('messages-container');
             const div = document.createElement('div');
-            div.className = `msg ${type}`;
+            const isMe = msg.sender_id === state.user.id;
+            div.className = `msg ${isMe ? 'me' : 'other'}`;
             div.innerText = msg.content;
             container.appendChild(div);
-            scrollToBottom();
         }
 
-        function scrollToBottom() {
-            const container = document.getElementById('messages-container');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function sendMessage() {
+        window.sendMsg = async function() {
             const input = document.getElementById('msg-input');
-            const content = input.value.trim();
-            if (!content || !currentChatUserId) return;
-
-            input.value = ''; 
+            const txt = input.value.trim();
+            if(!txt || !state.currentChatId) return;
             
-            // Affichage optimiste
-            appendMessage({ content: content }, 'sent');
+            input.value = '';
+            // Optimistic UI
+            appendMsg({ sender_id: state.user.id, content: txt });
+            scrollToBottom();
 
             try {
                 await fetch(`${API_URL}/api/messages/send`, {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        receiver_id: currentChatUserId,
-                        content: content,
-                        type: 'text'
-                    })
+                    headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ receiver_id: state.currentChatId, content: txt })
                 });
-            } catch (err) {
-                console.error(err);
-                showToast("Erreur d'envoi", true);
-            }
+            } catch(e) { console.error(e); }
+        };
+
+        function scrollToBottom() {
+            const c = document.getElementById('messages-container');
+            c.scrollTop = c.scrollHeight;
         }
 
+        // --- WEBSOCKET ---
+        function connectWS() {
+            if(!state.user.id) return;
+            state.socket = new WebSocket(`${WS_URL}/${state.user.id}`);
+            
+            state.socket.onopen = () => console.log("WS Connected");
+            state.socket.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if(data.type === 'new_message') {
+                    if(state.currentChatId === data.sender_id) {
+                        appendMsg(data);
+                        scrollToBottom();
+                    } else {
+                        showToast(`Message de ${data.sender_username}`, 'info');
+                        if(views.chat.classList.contains('active')) loadConversations();
+                    }
+                }
+            };
+            state.socket.onclose = () => setTimeout(connectWS, 3000); // Reconnect
+        }
+
+        // --- PROFIL ---
+        async function loadProfile() {
+            const res = await fetch(`${API_URL}/api/users/me`, {
+                headers: { 'Authorization': `Bearer ${state.token}` }
+            });
+            const u = await res.json();
+            
+            document.getElementById('profile-content').innerHTML = `
+                <div class="profile-header">
+                    <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.username}" class="profile-pic">
+                    <h2>${u.username}</h2>
+                    <p style="color:gray;">${u.bio || 'Aucune biographie'}</p>
+                    
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-num">${u.followers_count}</div>
+                            <div class="stat-label">Abonnés</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">${u.following_count}</div>
+                            <div class="stat-label">Suivis</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">${u.likes_received}</div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding:15px;">
+                    <h3 style="margin-bottom:10px;">Vidéos (${u.videos_count})</h3>
+                    <div style="text-align:center; color:gray; font-size:0.9rem;">
+                        Retrouvez vos vidéos dans le feed public.
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TOAST ---
+        function showToast(msg, type='info') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.style.borderLeftColor = type === 'error' ? '#ff4444' : (type === 'success' ? '#00C851' : 'var(--primary)');
+            el.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        // Démarrage
+        init();
+        
+        // Enter key for chat
         document.getElementById('msg-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') sendMessage();
+            if (e.key === 'Enter') sendMsg();
         });
 
-        // --- SEARCH ---
-        async function searchUsers() {
-            const q = document.getElementById('search-input').value;
-            if (q.length < 2) return;
-
-            try {
-                const res = await fetch(`${API_URL}/api/search?q=${q}&type=users`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const users = await res.json();
-                const div = document.getElementById('search-results');
-                div.innerHTML = '';
-                
-                users.forEach(u => {
-                    const el = document.createElement('div');
-                    el.className = 'chat-list-item';
-                    el.innerHTML = `
-                        <img src="${u.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
-                        <b>${u.username}</b>
-                        <button style="width:auto; margin-left:auto; padding:5px 15px; background:var(--primary); font-size:0.8rem;" onclick="openChat('${u.id}', '${u.username}', false)">Message</button>
-                    `;
-                    div.appendChild(el);
-                });
-            } catch(e) {
-                console.error("Erreur recherche", e);
-            }
-        }
-
-        // --- PROFILE ---
-        async function loadProfile() {
-            try {
-                const res = await fetch(`${API_URL}/api/users/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                
-                document.getElementById('profile-content').innerHTML = `
-                    <div class="profile-header">
-                        <img src="${data.avatar_url || 'https://via.placeholder.com/100'}" class="profile-avatar">
-                        <h2>${data.username}</h2>
-                        <p style="color:var(--text-gray);">${data.bio || "Aucune biographie."}</p>
-                        <p style="font-size:0.8rem; margin-top:10px; color:gray;">Inscrit le: ${new Date(data.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div class="profile-stats">
-                        <div class="stat-box">
-                            <span class="stat-num">${data.followers_count}</span>
-                            <span class="stat-label">Abonnés</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-num">${data.following_count}</span>
-                            <span class="stat-label">Abonnements</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-num">${data.likes_received}</span>
-                            <span class="stat-label">J'aime</span>
-                        </div>
-                    </div>
-                    <div style="padding:20px; text-align:center;">
-                        <h3>Mes Vidéos (${data.videos_count})</h3>
-                    </div>
-                `;
-            } catch(e) {
-                console.error("Erreur profil", e);
-            }
-        }
     </script>
 </body>
 </html>
