@@ -9,6 +9,7 @@
         :root {
             --primary: #007bff;
             --dark: #121212;
+            --card-bg: #1e1e1e;
             --light: #ffffff;
             --gray: #2c2c2c;
             --text-gray: #a0a0a0;
@@ -25,75 +26,97 @@
             background: var(--dark); border-top: 1px solid var(--gray);
             display: flex; justify-content: space-around; align-items: center; z-index: 1000;
         }
-        .nav-item { color: var(--text-gray); font-size: 1.5rem; cursor: pointer; }
+        .nav-item { color: var(--text-gray); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .nav-item:active { transform: scale(0.9); }
         .nav-item.active { color: var(--primary); }
 
         /* --- SECTIONS (Vues) --- */
-        .section { display: none; padding: 20px; min-height: 100vh; }
+        .section { display: none; padding: 20px; min-height: 100vh; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* --- AUTH FORMS --- */
         .auth-container { max-width: 400px; margin: 50px auto; text-align: center; }
+        h1 { margin-bottom: 20px; color: var(--primary); }
         input, textarea {
             width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
-            border: 1px solid var(--gray); background: var(--gray); color: white;
+            border: 1px solid var(--gray); background: var(--gray); color: white; outline: none;
         }
+        input:focus { border-color: var(--primary); }
         button {
             width: 100%; padding: 12px; background: var(--primary); color: white;
             border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+            transition: 0.2s;
         }
-        .link { color: var(--primary); cursor: pointer; margin-top: 10px; display: block; }
+        button:hover { opacity: 0.9; }
+        .link { color: var(--primary); cursor: pointer; margin-top: 15px; display: block; font-size: 0.9rem; }
 
         /* --- FEED VIDEO --- */
         .video-card {
-            background: var(--gray); border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+            background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .video-player { width: 100%; max-height: 500px; background: black; }
+        .video-player { width: 100%; max-height: 500px; background: black; display: block; }
         .video-info { padding: 15px; }
         .user-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .stats { display: flex; gap: 15px; margin-top: 10px; color: var(--text-gray); }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+        .stats { display: flex; gap: 15px; margin-top: 10px; color: var(--text-gray); font-size: 0.9rem; }
+        .stats i { color: var(--primary); margin-right: 5px; }
 
         /* --- CHAT --- */
         .chat-list-item {
             display: flex; align-items: center; gap: 15px; padding: 15px;
-            border-bottom: 1px solid var(--gray); cursor: pointer;
+            border-bottom: 1px solid var(--gray); cursor: pointer; transition: background 0.2s;
         }
+        .chat-list-item:hover { background: var(--gray); }
         .message-area {
-            height: calc(100vh - 180px); overflow-y: auto; padding-bottom: 20px;
+            height: calc(100vh - 140px); overflow-y: auto; padding: 10px; padding-bottom: 20px;
             display: flex; flex-direction: column; gap: 10px;
         }
-        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; }
-        .msg.sent { align-self: flex-end; background: var(--primary); }
-        .msg.received { align-self: flex-start; background: var(--gray); }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .msg.sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .msg.received { align-self: flex-start; background: var(--gray); color: white; border-bottom-left-radius: 2px; }
         .chat-input-area {
             position: fixed; bottom: var(--nav-height); left: 0; width: 100%;
-            padding: 10px; background: var(--dark); display: flex; gap: 10px;
+            padding: 10px; background: var(--card-bg); display: flex; gap: 10px; align-items: center;
+            border-top: 1px solid var(--gray);
         }
 
         /* --- PROFIL --- */
-        .profile-header { text-align: center; margin-bottom: 30px; }
+        .profile-header { text-align: center; margin-bottom: 30px; background: var(--card-bg); padding: 30px; border-radius: 0 0 20px 20px; }
         .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--primary); }
         .profile-stats { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
         .stat-box { text-align: center; }
-        .stat-num { font-weight: bold; font-size: 1.2rem; }
+        .stat-num { font-weight: bold; font-size: 1.2rem; display: block; }
         .stat-label { font-size: 0.8rem; color: var(--text-gray); }
 
-        /* --- NOTIFICATIONS --- */
+        /* --- TOAST NOTIFICATION --- */
         #toast {
-            position: fixed; top: 20px; right: 20px; background: var(--primary);
-            padding: 15px; border-radius: 8px; z-index: 2000; display: none;
+            position: fixed; top: 20px; right: 20px; background: var(--primary); color: white;
+            padding: 15px 25px; border-radius: 50px; z-index: 2000; display: none;
+            box-shadow: 0 4px 10px rgba(0,123,255,0.4); animation: slideIn 0.3s ease;
         }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* --- UPLOAD AREA --- */
+        .upload-zone {
+            border: 2px dashed var(--gray); padding: 40px; text-align: center; 
+            margin-bottom: 20px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .upload-zone:hover { border-color: var(--primary); background: rgba(0,123,255,0.05); }
     </style>
 </head>
 <body>
 
-    <div id="toast">Message reçu</div>
+    <div id="toast">Notification</div>
 
     <div id="auth-section" class="section active">
         <div class="auth-container">
             <h1>M&J Ultimate</h1>
-            <p>Connectez-vous pour continuer</p>
+            <p style="color: var(--text-gray);">Bienvenue sur votre plateforme</p>
+            <p style="font-size: 0.8rem; color: orange; margin-bottom: 20px;">
+                Note : Si le serveur "dort", la première connexion peut prendre 1 minute.
+            </p>
             
             <form id="login-form">
                 <input type="text" id="login-username" placeholder="Nom d'utilisateur" required>
@@ -101,7 +124,7 @@
                 <button type="submit">Se connecter</button>
             </form>
             
-            <span class="link" onclick="toggleAuth('register')">Pas de compte ? S'inscrire</span>
+            <span class="link" onclick="toggleAuth('register')">Pas de compte ? Créer un compte</span>
         </div>
     </div>
 
@@ -121,67 +144,76 @@
     <div id="app-container" style="display: none;">
         
         <div id="home-section" class="section">
-            <h2>Explorer</h2>
+            <h2 style="margin-bottom: 15px;">Explorer</h2>
             <div id="video-feed">
-                <p style="text-align:center; margin-top:50px;">Chargement...</p>
+                <p style="text-align:center; color: var(--text-gray); margin-top:50px;">Chargement du flux...</p>
             </div>
         </div>
 
         <div id="search-section" class="section">
-            <input type="text" id="search-input" placeholder="Rechercher des utilisateurs..." onkeyup="searchUsers()">
-            <div id="search-results"></div>
+            <h2 style="margin-bottom: 15px;">Recherche</h2>
+            <input type="text" id="search-input" placeholder="Chercher un utilisateur..." onkeyup="searchUsers()">
+            <div id="search-results" style="margin-top: 20px;"></div>
         </div>
 
         <div id="upload-section" class="section">
-            <h2>Publier une vidéo</h2>
+            <h2 style="margin-bottom: 15px;">Publier</h2>
             <form id="upload-form">
-                <div style="border: 2px dashed var(--gray); padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 10px;">
+                <div class="upload-zone" onclick="document.getElementById('video-file').click()">
                     <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary);"></i>
-                    <br><br>
+                    <p style="margin-top: 10px;">Cliquez pour choisir une vidéo</p>
                     <input type="file" id="video-file" accept="video/*" required style="display: none;">
-                    <button type="button" onclick="document.getElementById('video-file').click()">Choisir une vidéo</button>
-                    <p id="file-name" style="margin-top: 10px; color: var(--text-gray);"></p>
+                    <p id="file-name" style="margin-top: 10px; color: var(--primary); font-weight: bold;"></p>
                 </div>
-                <textarea id="video-desc" placeholder="Description de votre vidéo..."></textarea>
-                <button type="submit" id="upload-btn">Publier</button>
+                <textarea id="video-desc" rows="3" placeholder="Description de votre vidéo..."></textarea>
+                <button type="submit" id="upload-btn">Publier la vidéo</button>
             </form>
         </div>
 
         <div id="chat-list-section" class="section">
-            <h2>Messages</h2>
+            <h2 style="margin-bottom: 15px;">Messages</h2>
             <div id="conversations-list"></div>
         </div>
 
-        <div id="chat-room-section" class="section" style="padding-bottom: 70px;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <button onclick="showSection('chat-list-section')" style="width: auto; padding: 5px 15px; margin: 0; margin-right: 10px;">←</button>
-                <h3 id="chat-with-username">Chat</h3>
+        <div id="chat-room-section" class="section" style="padding: 0; padding-bottom: 70px;">
+            <div style="background: var(--card-bg); padding: 15px; display: flex; align-items: center; position: sticky; top: 0; border-bottom: 1px solid var(--gray);">
+                <button onclick="showSection('chat-list-section')" style="width: auto; padding: 5px 15px; margin: 0; margin-right: 15px; background: transparent;"><i class="fas fa-arrow-left"></i></button>
+                <h3 id="chat-with-username" style="margin: 0;">Chat</h3>
+                <div id="online-indicator" style="width: 10px; height: 10px; background: #4CAF50; border-radius: 50%; margin-left: 10px; display:none;"></div>
             </div>
+            
             <div id="messages-container" class="message-area"></div>
+            
             <div class="chat-input-area">
-                <input type="text" id="msg-input" placeholder="Votre message..." style="margin: 0;">
-                <button onclick="sendMessage()" style="width: 50px; margin: 0;"><i class="fas fa-paper-plane"></i></button>
+                <input type="text" id="msg-input" placeholder="Votre message..." style="margin: 0; border-radius: 20px;">
+                <button onclick="sendMessage()" style="width: 50px; height: 50px; border-radius: 50%; margin: 0; padding: 0;"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
 
-        <div id="profile-section" class="section">
+        <div id="profile-section" class="section" style="padding: 0;">
             <div id="profile-content"></div>
-            <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Déconnexion</button>
+            <div style="padding: 20px;">
+                <button onclick="logout()" style="background: #dc3545;">Déconnexion</button>
+            </div>
         </div>
 
         <div class="bottom-nav">
             <div class="nav-item active" onclick="showSection('home-section')"><i class="fas fa-home"></i></div>
             <div class="nav-item" onclick="showSection('search-section')"><i class="fas fa-search"></i></div>
-            <div class="nav-item" onclick="showSection('upload-section')"><i class="fas fa-plus-square"></i></div>
-            <div class="nav-item" onclick="showSection('chat-list-section')"><i class="fas fa-comment-alt"></i></div>
+            <div class="nav-item" onclick="showSection('upload-section')"><i class="fas fa-plus-circle" style="font-size: 2rem;"></i></div>
+            <div class="nav-item" onclick="showSection('chat-list-section')"><i class="fas fa-comment-dots"></i></div>
             <div class="nav-item" onclick="showSection('profile-section')"><i class="fas fa-user"></i></div>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION
-        const API_URL = "http://127.0.0.1:8000"; // Changer si le serveur est ailleurs
-        const WS_URL = "ws://127.0.0.1:8000/ws";
+        // ================== CONFIGURATION SERVEUR ==================
+        // Connexion au serveur distant sur Render
+        const API_URL = "https://mj-hub.onrender.com"; 
+        
+        // WebSocket sécurisé (WSS) obligatoire pour HTTPS
+        const WS_URL = "wss://mj-hub.onrender.com/ws";
+        // ===========================================================
         
         let token = localStorage.getItem('token');
         let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -202,13 +234,18 @@
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Connexion en cours...";
+            btn.disabled = true;
+            
             const formData = new FormData();
             formData.append('username', document.getElementById('login-username').value);
             formData.append('password', document.getElementById('login-password').value);
 
             try {
                 const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
-                if (!res.ok) throw new Error('Échec connexion');
+                if (!res.ok) throw new Error('Identifiants incorrects ou serveur indisponible');
                 const data = await res.json();
                 
                 token = data.access_token;
@@ -219,12 +256,19 @@
                 
                 initApp();
             } catch (err) {
-                alert(err.message);
+                showToast(err.message, true);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         });
 
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Création...";
+            btn.disabled = true;
+
             const data = {
                 username: document.getElementById('reg-username').value,
                 password: document.getElementById('reg-password').value,
@@ -239,17 +283,21 @@
                 });
                 if (!res.ok) {
                     const err = await res.json();
-                    throw new Error(err.detail || "Erreur");
+                    throw new Error(err.detail || "Erreur inscription");
                 }
-                alert("Compte créé ! Connectez-vous.");
+                showToast("Compte créé ! Connectez-vous.");
                 toggleAuth('login');
             } catch (err) {
-                alert("Erreur: " + err.message);
+                showToast(err.message, true);
+            } finally {
+                btn.innerText = "S'inscrire";
+                btn.disabled = false;
             }
         });
 
         function logout() {
             localStorage.clear();
+            if(socket) socket.close();
             location.reload();
         }
 
@@ -267,87 +315,129 @@
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            // Highlight nav item
+            // Highlight nav icons
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            // Logique simple pour highlight (optionnel)
+            const map = {
+                'home-section': 0, 'search-section': 1, 'upload-section': 2,
+                'chat-list-section': 3, 'profile-section': 4, 'chat-room-section': 3
+            };
+            if(map[id] !== undefined) document.querySelectorAll('.nav-item')[map[id]].classList.add('active');
             
             if (id === 'home-section') loadFeed();
             if (id === 'chat-list-section') loadConversations();
             if (id === 'profile-section') loadProfile();
         }
 
-        // --- WEBSOCKET ---
+        // --- WEBSOCKET & NOTIFICATIONS ---
         function connectWebSocket() {
             if (!currentUser.id) return;
+            
+            // On ferme l'ancienne connexion si elle existe
+            if(socket && socket.readyState !== WebSocket.CLOSED) {
+                return;
+            }
+
+            console.log(`Tentative de connexion WS à ${WS_URL}/${currentUser.id}`);
             socket = new WebSocket(`${WS_URL}/${currentUser.id}`);
             
             socket.onopen = () => console.log("WS Connecté");
             
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
+                
                 if (data.type === 'new_message') {
-                    showToast(`Message de ${data.sender_username}`);
-                    if (currentChatUserId === data.sender_id) {
+                    if (currentChatUserId === data.sender_id && document.getElementById('chat-room-section').classList.contains('active')) {
                         appendMessage(data, 'received');
                     } else {
-                        // Refresh converastion list indicator if open
+                        showToast(`Nouveau message de ${data.sender_username}`);
                     }
                 }
             };
             
-            socket.onclose = () => setTimeout(connectWebSocket, 3000); // Reconnexion
+            socket.onerror = (error) => {
+                console.error("Erreur WebSocket", error);
+            };
+
+            socket.onclose = () => {
+                console.log("WS Deconnecté, reconnexion dans 5s...");
+                setTimeout(connectWebSocket, 5000); 
+            };
         }
 
-        function showToast(msg) {
+        function showToast(msg, isError = false) {
             const t = document.getElementById('toast');
             t.innerText = msg;
+            t.style.backgroundColor = isError ? '#dc3545' : 'var(--primary)';
             t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
         // --- FEED & VIDEOS ---
         async function loadFeed() {
-            const res = await fetch(`${API_URL}/api/feed`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const videos = await res.json();
-            const container = document.getElementById('video-feed');
-            container.innerHTML = '';
+            try {
+                const res = await fetch(`${API_URL}/api/feed`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Erreur chargement feed");
+                
+                const videos = await res.json();
+                const container = document.getElementById('video-feed');
+                
+                if(videos.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">Aucune vidéo pour le moment.</p>';
+                    return;
+                }
 
-            videos.forEach(v => {
-                const div = document.createElement('div');
-                div.className = 'video-card';
-                div.innerHTML = `
-                    <div class="user-head" style="padding:10px;">
-                        <img src="${v.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
-                        <b>${v.username}</b>
-                    </div>
-                    <video src="${v.video_url}" class="video-player" controls loop></video>
-                    <div class="video-info">
-                        <p>${v.description}</p>
-                        <div class="stats">
-                            <span><i class="fas fa-heart"></i> ${v.likes}</span>
-                            <span><i class="fas fa-eye"></i> ${v.views}</span>
+                container.innerHTML = '';
+                videos.forEach(v => {
+                    const div = document.createElement('div');
+                    div.className = 'video-card';
+                    div.innerHTML = `
+                        <div class="user-head" style="padding:10px;">
+                            <img src="${v.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
+                            <b>${v.username}</b>
+                            <span style="margin-left:auto; font-size:0.8rem; color:gray;">${new Date(v.created_at).toLocaleDateString()}</span>
                         </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+                        <video src="${v.video_url}" class="video-player" controls preload="metadata"></video>
+                        <div class="video-info">
+                            <p>${v.description}</p>
+                            <div class="stats">
+                                <span><i class="fas fa-heart"></i> ${v.likes}</span>
+                                <span><i class="fas fa-eye"></i> ${v.views}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+                document.getElementById('video-feed').innerHTML = '<p style="text-align:center; color:red;">Erreur de connexion au serveur.</p>';
+            }
         }
 
         // --- UPLOAD ---
         document.getElementById('video-file').addEventListener('change', function() {
-            document.getElementById('file-name').innerText = this.files[0] ? this.files[0].name : '';
+            const fileName = this.files[0] ? this.files[0].name : '';
+            document.getElementById('file-name').innerText = fileName;
         });
 
         document.getElementById('upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('upload-btn');
-            btn.innerText = "Téléchargement en cours...";
+            const originalText = btn.innerText;
+            btn.innerText = "Envoi vers Cloudinary...";
             btn.disabled = true;
 
             const formData = new FormData();
-            formData.append('video', document.getElementById('video-file').files[0]);
+            const fileInput = document.getElementById('video-file');
+            
+            if(fileInput.files.length === 0) {
+                showToast("Veuillez sélectionner une vidéo", true);
+                btn.disabled = false; btn.innerText = originalText;
+                return;
+            }
+
+            formData.append('video', fileInput.files[0]);
             formData.append('description', document.getElementById('video-desc').value);
 
             try {
@@ -356,14 +446,18 @@
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
-                if (!res.ok) throw new Error("Erreur upload");
-                alert("Vidéo publiée avec succès !");
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Erreur upload");
+                }
+                showToast("Vidéo publiée avec succès !");
                 document.getElementById('upload-form').reset();
+                document.getElementById('file-name').innerText = "";
                 showSection('home-section');
             } catch (err) {
-                alert(err.message);
+                showToast(err.message, true);
             } finally {
-                btn.innerText = "Publier";
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         });
@@ -377,6 +471,10 @@
             const list = document.getElementById('conversations-list');
             list.innerHTML = '';
 
+            if(convs.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:gray;">Aucune conversation. Utilisez la recherche.</p>';
+            }
+
             convs.forEach(c => {
                 const div = document.createElement('div');
                 div.className = 'chat-list-item';
@@ -385,33 +483,35 @@
                     <div style="flex:1;">
                         <div style="display:flex; justify-content:space-between;">
                             <b>${c.username}</b>
-                            <small>${new Date(c.last_message_time).toLocaleTimeString()}</small>
+                            <small style="color:gray;">${new Date(c.last_message_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                         </div>
-                        <p style="color:var(--text-gray);">${c.last_message || '...'}</p>
+                        <p style="color:var(--text-gray); font-size:0.9rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:200px;">
+                            ${c.last_message || '...'}
+                        </p>
                     </div>
-                    ${c.unread_count > 0 ? `<span style="background:red; border-radius:50%; padding:2px 6px; font-size:12px;">${c.unread_count}</span>` : ''}
+                    ${c.unread_count > 0 ? `<span style="background:var(--primary); border-radius:50%; min-width:20px; height:20px; text-align:center; font-size:12px; line-height:20px;">${c.unread_count}</span>` : ''}
                 `;
-                div.onclick = () => openChat(c.user_id, c.username);
+                div.onclick = () => openChat(c.user_id, c.username, c.is_online);
                 list.appendChild(div);
             });
         }
 
-        async function openChat(userId, username) {
+        async function openChat(userId, username, isOnline) {
             currentChatUserId = userId;
             document.getElementById('chat-with-username').innerText = username;
+            
+            const indicator = document.getElementById('online-indicator');
+            indicator.style.display = isOnline ? 'block' : 'none';
+            
             showSection('chat-room-section');
             
             const res = await fetch(`${API_URL}/api/messages/${userId}?limit=50`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const msgs = await res.json(); // Le backend les renvoie inversés pour l'affichage
+            const msgs = await res.json();
             
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
-            
-            // Le backend renvoie du plus récent au plus ancien, on doit inverser pour afficher
-            // Mais dans ton code backend `reversed(messages)` est fait, donc on les reçoit chronologiquement ?
-            // On va assumer qu'on les reçoit dans l'ordre chronologique pour l'affichage
             
             msgs.forEach(m => {
                 appendMessage(m, m.sender_id === currentUser.id ? 'sent' : 'received');
@@ -438,9 +538,9 @@
             const content = input.value.trim();
             if (!content || !currentChatUserId) return;
 
-            input.value = ''; // Clear immediately
+            input.value = ''; 
             
-            // Optimistic UI update
+            // Affichage optimiste
             appendMessage({ content: content }, 'sent');
 
             try {
@@ -456,65 +556,80 @@
                         type: 'text'
                     })
                 });
-                // Le message est aussi renvoyé par le socket "message_sent", on ignore ici pour éviter doublon
             } catch (err) {
                 console.error(err);
-                alert("Erreur envoi");
+                showToast("Erreur d'envoi", true);
             }
         }
+
+        document.getElementById('msg-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
 
         // --- SEARCH ---
         async function searchUsers() {
             const q = document.getElementById('search-input').value;
             if (q.length < 2) return;
 
-            const res = await fetch(`${API_URL}/api/search?q=${q}&type=users`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const users = await res.json();
-            const div = document.getElementById('search-results');
-            div.innerHTML = '';
-            
-            users.forEach(u => {
-                const el = document.createElement('div');
-                el.className = 'chat-list-item';
-                el.innerHTML = `
-                    <img src="${u.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
-                    <b>${u.username}</b>
-                    <button style="width:auto; margin-left:auto; padding:5px 10px;" onclick="openChat('${u.id}', '${u.username}')">Message</button>
-                `;
-                div.appendChild(el);
-            });
+            try {
+                const res = await fetch(`${API_URL}/api/search?q=${q}&type=users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                const div = document.getElementById('search-results');
+                div.innerHTML = '';
+                
+                users.forEach(u => {
+                    const el = document.createElement('div');
+                    el.className = 'chat-list-item';
+                    el.innerHTML = `
+                        <img src="${u.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
+                        <b>${u.username}</b>
+                        <button style="width:auto; margin-left:auto; padding:5px 15px; background:var(--primary); font-size:0.8rem;" onclick="openChat('${u.id}', '${u.username}', false)">Message</button>
+                    `;
+                    div.appendChild(el);
+                });
+            } catch(e) {
+                console.error("Erreur recherche", e);
+            }
         }
 
         // --- PROFILE ---
         async function loadProfile() {
-            const res = await fetch(`${API_URL}/api/users/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            
-            document.getElementById('profile-content').innerHTML = `
-                <div class="profile-header">
-                    <img src="${data.avatar_url || 'https://via.placeholder.com/100'}" class="profile-avatar">
-                    <h2>${data.username}</h2>
-                    <p>${data.bio || "Pas de bio"}</p>
-                </div>
-                <div class="profile-stats">
-                    <div class="stat-box">
-                        <div class="stat-num">${data.followers_count}</div>
-                        <div class="stat-label">Abonnés</div>
+            try {
+                const res = await fetch(`${API_URL}/api/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                document.getElementById('profile-content').innerHTML = `
+                    <div class="profile-header">
+                        <img src="${data.avatar_url || 'https://via.placeholder.com/100'}" class="profile-avatar">
+                        <h2>${data.username}</h2>
+                        <p style="color:var(--text-gray);">${data.bio || "Aucune biographie."}</p>
+                        <p style="font-size:0.8rem; margin-top:10px; color:gray;">Inscrit le: ${new Date(data.created_at).toLocaleDateString()}</p>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-num">${data.following_count}</div>
-                        <div class="stat-label">Abonnements</div>
+                    <div class="profile-stats">
+                        <div class="stat-box">
+                            <span class="stat-num">${data.followers_count}</span>
+                            <span class="stat-label">Abonnés</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-num">${data.following_count}</span>
+                            <span class="stat-label">Abonnements</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-num">${data.likes_received}</span>
+                            <span class="stat-label">J'aime</span>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-num">${data.likes_received}</div>
-                        <div class="stat-label">J'aime</div>
+                    <div style="padding:20px; text-align:center;">
+                        <h3>Mes Vidéos (${data.videos_count})</h3>
                     </div>
-                </div>
-            `;
+                `;
+            } catch(e) {
+                console.error("Erreur profil", e);
+            }
         }
     </script>
 </body>
