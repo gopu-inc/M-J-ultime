@@ -3,1963 +3,518 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M&J Social - HoostHubs</title>
+    <title>M&J Ultimate App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #FF0055;
-            --primary-dark: #cc0044;
-            --secondary: #1a1a2e;
-            --background: #0f0f1e;
-            --card-bg: #1e1e2e;
-            --text: #ffffff;
-            --text-secondary: #a0a0c0;
-            --border: #2d2d4d;
-            --success: #00cc88;
-            --danger: #ff4444;
-            --warning: #ffbb00;
+            --primary: #007bff;
+            --dark: #121212;
+            --light: #ffffff;
+            --gray: #2c2c2c;
+            --text-gray: #a0a0a0;
+            --nav-height: 60px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { background-color: var(--dark); color: var(--light); padding-bottom: var(--nav-height); }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--background);
-            color: var(--text);
-            line-height: 1.6;
+        /* --- NAVIGATION --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: var(--nav-height);
+            background: var(--dark); border-top: 1px solid var(--gray);
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
         }
+        .nav-item { color: var(--text-gray); font-size: 1.5rem; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
 
-        .app-container {
-            display: flex;
-            min-height: 100vh;
+        /* --- SECTIONS (Vues) --- */
+        .section { display: none; padding: 20px; min-height: 100vh; }
+        .section.active { display: block; }
+
+        /* --- AUTH FORMS --- */
+        .auth-container { max-width: 400px; margin: 50px auto; text-align: center; }
+        input, textarea {
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
+            border: 1px solid var(--gray); background: var(--gray); color: white;
         }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background-color: var(--card-bg);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
+        button {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
+        .link { color: var(--primary); cursor: pointer; margin-top: 10px; display: block; }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .logo i {
-            font-size: 28px;
-        }
-
-        .nav-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 15px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background-color: rgba(255, 0, 85, 0.1);
-            color: var(--primary);
-        }
-
-        .nav-link i {
-            width: 24px;
-            text-align: center;
-        }
-
-        .user-profile {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .username {
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .search-bar {
-            flex: 1;
-            max-width: 500px;
-            position: relative;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 25px;
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-
-        .upload-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background-color 0.3s ease;
-        }
-
-        .upload-btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        /* Content Sections */
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        /* Feed */
-        .feed {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .stories-container {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 15px 0;
-            margin-bottom: 30px;
-        }
-
-        .story-item {
-            flex: 0 0 auto;
-            width: 100px;
-            text-align: center;
-        }
-
-        .story-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--primary);
-            padding: 2px;
-            margin-bottom: 8px;
-        }
-
-        .story-username {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* Video Cards */
+        /* --- FEED VIDEO --- */
         .video-card {
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 30px;
-            border: 1px solid var(--border);
-        }
-
-        .video-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-        }
-
-        .video-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .video-user-info {
-            flex: 1;
-        }
-
-        .video-username {
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .video-time {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .video-container {
-            width: 100%;
-            aspect-ratio: 9/16;
-            background-color: #000;
-            position: relative;
-        }
-
-        .video-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .video-actions {
-            padding: 15px;
-        }
-
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .action-btn i {
-            transition: transform 0.2s ease;
-        }
-
-        .action-btn:hover i {
-            transform: scale(1.1);
-        }
-
-        .action-btn.liked {
-            color: var(--primary);
-        }
-
-        .action-count {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .video-description {
-            padding: 0 15px 15px;
-            font-size: 14px;
-        }
-
-        .video-hashtags {
-            color: var(--primary);
-        }
-
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            color: var(--primary);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-block {
-            width: 100%;
-        }
-
-        /* Login Page */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--background) 0%, #1a1a2e 100%);
-        }
-
-        .login-card {
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .login-logo {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 32px;
-            color: var(--primary);
-        }
-
-        .tab-container {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 15px 10px;
-            }
-
-            .logo span, .nav-link span, .user-info {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 70px;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .search-bar {
-                max-width: 100%;
-            }
-        }
-
-        /* Messages */
-        .messages-container {
-            display: flex;
-            height: calc(100vh - 100px);
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .conversations-list {
-            width: 300px;
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-        }
-
-        .conversation-item {
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .conversation-item:hover, .conversation-item.active {
-            background-color: rgba(255, 0, 85, 0.1);
-        }
-
-        .conversation-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .conversation-info {
-            flex: 1;
-        }
-
-        .conversation-name {
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .conversation-last {
-            font-size: 12px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 200px;
-        }
-
-        .unread-badge {
-            background-color: var(--primary);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 12px 15px;
-            border-radius: 15px;
-            position: relative;
-        }
-
-        .message.sent {
-            align-self: flex-end;
-            background-color: var(--primary);
-            border-bottom-right-radius: 5px;
-        }
-
-        .message.received {
-            align-self: flex-start;
-            background-color: var(--border);
-            border-bottom-left-radius: 5px;
-        }
-
-        .chat-input {
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input input {
-            flex: 1;
-            padding: 12px 15px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 25px;
-            color: var(--text);
-        }
-
-        .send-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Profile */
-        .profile-header {
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .profile-cover {
-            height: 200px;
-            background: linear-gradient(135deg, var(--primary) 0%, #6a11cb 100%);
-            border-radius: 15px;
-            margin-bottom: -60px;
-        }
-
-        .profile-info {
-            display: flex;
-            align-items: flex-end;
-            gap: 30px;
-        }
-
-        .profile-avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid var(--card-bg);
-        }
-
-        .profile-details {
-            flex: 1;
-            padding-bottom: 20px;
-        }
-
-        .profile-name {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .profile-username {
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-        }
-
-        .profile-bio {
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .profile-stats {
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-count {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .loading i {
-            font-size: 40px;
-            margin-bottom: 20px;
-            color: var(--primary);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Notifications */
-        .notification-item {
-            padding: 15px;
-            background-color: var(--card-bg);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: background-color 0.3s ease;
-        }
-
-        .notification-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .notification-item.unread {
-            background-color: rgba(255, 0, 85, 0.1);
+            background: var(--gray); border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+        }
+        .video-player { width: 100%; max-height: 500px; background: black; }
+        .video-info { padding: 15px; }
+        .user-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .stats { display: flex; gap: 15px; margin-top: 10px; color: var(--text-gray); }
+
+        /* --- CHAT --- */
+        .chat-list-item {
+            display: flex; align-items: center; gap: 15px; padding: 15px;
+            border-bottom: 1px solid var(--gray); cursor: pointer;
+        }
+        .message-area {
+            height: calc(100vh - 180px); overflow-y: auto; padding-bottom: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; }
+        .msg.sent { align-self: flex-end; background: var(--primary); }
+        .msg.received { align-self: flex-start; background: var(--gray); }
+        .chat-input-area {
+            position: fixed; bottom: var(--nav-height); left: 0; width: 100%;
+            padding: 10px; background: var(--dark); display: flex; gap: 10px;
+        }
+
+        /* --- PROFIL --- */
+        .profile-header { text-align: center; margin-bottom: 30px; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--primary); }
+        .profile-stats { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
+        .stat-box { text-align: center; }
+        .stat-num { font-weight: bold; font-size: 1.2rem; }
+        .stat-label { font-size: 0.8rem; color: var(--text-gray); }
+
+        /* --- NOTIFICATIONS --- */
+        #toast {
+            position: fixed; top: 20px; right: 20px; background: var(--primary);
+            padding: 15px; border-radius: 8px; z-index: 2000; display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div id="loginPage" class="login-container">
-        <div class="login-card">
-            <div class="login-logo">
-                <i class="fas fa-video"></i> M&J Social
-            </div>
+
+    <div id="toast">Message reçu</div>
+
+    <div id="auth-section" class="section active">
+        <div class="auth-container">
+            <h1>M&J Ultimate</h1>
+            <p>Connectez-vous pour continuer</p>
             
-            <div class="tab-container">
-                <button class="tab active" onclick="showLoginTab('login')">Connexion</button>
-                <button class="tab" onclick="showLoginTab('register')">Inscription</button>
-            </div>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Nom d'utilisateur" required>
+                <input type="password" id="login-password" placeholder="Mot de passe" required>
+                <button type="submit">Se connecter</button>
+            </form>
             
-            <!-- Login Form -->
-            <div id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="loginUsername">Nom d'utilisateur</label>
-                    <input type="text" id="loginUsername" class="form-control" placeholder="Votre nom d'utilisateur">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Mot de passe</label>
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Votre mot de passe">
-                </div>
-                <button class="btn btn-primary btn-block" onclick="login()">
-                    <i class="fas fa-sign-in-alt"></i> Se connecter
-                </button>
-            </div>
-            
-            <!-- Register Form -->
-            <div id="registerForm" class="login-form" style="display: none;">
-                <div class="form-group">
-                    <label for="regUsername">Nom d'utilisateur</label>
-                    <input type="text" id="regUsername" class="form-control" placeholder="Choisissez un nom d'utilisateur">
-                </div>
-                <div class="form-group">
-                    <label for="regEmail">Email</label>
-                    <input type="email" id="regEmail" class="form-control" placeholder="Votre email">
-                </div>
-                <div class="form-group">
-                    <label for="regFullName">Nom complet</label>
-                    <input type="text" id="regFullName" class="form-control" placeholder="Votre nom complet">
-                </div>
-                <div class="form-group">
-                    <label for="regPassword">Mot de passe</label>
-                    <input type="password" id="regPassword" class="form-control" placeholder="Choisissez un mot de passe">
-                </div>
-                <button class="btn btn-primary btn-block" onclick="register()">
-                    <i class="fas fa-user-plus"></i> Créer un compte
-                </button>
-            </div>
-            
-            <div id="loginMessage" style="margin-top: 20px; color: var(--danger); text-align: center;"></div>
+            <span class="link" onclick="toggleAuth('register')">Pas de compte ? S'inscrire</span>
         </div>
     </div>
-    
-    <!-- Main App -->
-    <div id="appContainer" class="app-container" style="display: none;">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <i class="fas fa-video"></i>
-                <span>M&J Social</span>
-            </div>
-            
-            <div class="nav-links">
-                <a href="#" class="nav-link active" data-section="feed">
-                    <i class="fas fa-home"></i>
-                    <span>Accueil</span>
-                </a>
-                <a href="#" class="nav-link" data-section="explore">
-                    <i class="fas fa-compass"></i>
-                    <span>Explorer</span>
-                </a>
-                <a href="#" class="nav-link" data-section="messages">
-                    <i class="fas fa-comments"></i>
-                    <span>Messages</span>
-                    <span id="unreadMessages" class="unread-badge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-link" data-section="notifications">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
-                    <span id="unreadNotifications" class="unread-badge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-link" data-section="profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profil</span>
-                </a>
-                <a href="#" class="nav-link" id="uploadVideoBtn">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>Upload</span>
-                </a>
-            </div>
-            
-            <div class="user-profile">
-                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=FF0055&color=fff" alt="Avatar" class="user-avatar">
-                <div class="user-info">
-                    <div id="userName" class="username">Utilisateur</div>
-                    <div id="userEmail" class="user-email" style="font-size: 12px; color: var(--text-secondary);"></div>
-                </div>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
+
+    <div id="register-section" class="section">
+        <div class="auth-container">
+            <h1>Inscription</h1>
+            <form id="register-form">
+                <input type="text" id="reg-username" placeholder="Nom d'utilisateur (a-z, 0-9)" required>
+                <input type="email" id="reg-email" placeholder="Email (optionnel)">
+                <input type="password" id="reg-password" placeholder="Mot de passe (min 6 chars)" required>
+                <button type="submit">S'inscrire</button>
+            </form>
+            <span class="link" onclick="toggleAuth('login')">Déjà un compte ? Se connecter</span>
         </div>
+    </div>
+
+    <div id="app-container" style="display: none;">
         
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <div class="header">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Rechercher des utilisateurs, vidéos, hashtags...">
-                </div>
-                <button class="upload-btn" id="uploadVideoBtn2">
-                    <i class="fas fa-plus"></i> Upload vidéo
-                </button>
-            </div>
-            
-            <!-- Content Sections -->
-            <div id="feedSection" class="content-section active">
-                <div class="stories-container" id="storiesContainer">
-                    <!-- Stories will be loaded here -->
-                </div>
-                <div class="feed" id="videoFeed">
-                    <!-- Videos will be loaded here -->
-                </div>
-            </div>
-            
-            <div id="exploreSection" class="content-section">
-                <h2 style="margin-bottom: 20px;">Explorer</h2>
-                <div id="exploreVideos">
-                    <!-- Explore videos will be loaded here -->
-                </div>
-            </div>
-            
-            <div id="messagesSection" class="content-section">
-                <div class="messages-container">
-                    <div class="conversations-list" id="conversationsList">
-                        <!-- Conversations will be loaded here -->
-                    </div>
-                    <div class="chat-container" id="chatContainer" style="display: none;">
-                        <div class="chat-header" id="chatHeader">
-                            <!-- Chat header will be loaded here -->
-                        </div>
-                        <div class="chat-messages" id="chatMessages">
-                            <!-- Messages will be loaded here -->
-                        </div>
-                        <div class="chat-input">
-                            <input type="text" id="messageInput" placeholder="Écrivez votre message...">
-                            <button class="send-btn" onclick="sendMessage()">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="notificationsSection" class="content-section">
-                <h2 style="margin-bottom: 20px;">Notifications</h2>
-                <div id="notificationsList">
-                    <!-- Notifications will be loaded here -->
-                </div>
-            </div>
-            
-            <div id="profileSection" class="content-section">
-                <div id="profileContent">
-                    <!-- Profile will be loaded here -->
-                </div>
+        <div id="home-section" class="section">
+            <h2>Explorer</h2>
+            <div id="video-feed">
+                <p style="text-align:center; margin-top:50px;">Chargement...</p>
             </div>
         </div>
-    </div>
-    
-    <!-- Upload Modal -->
-    <div id="uploadModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Upload vidéo</h2>
-                <button class="close-modal" onclick="closeModal('uploadModal')">&times;</button>
-            </div>
-            <form id="uploadForm">
-                <div class="form-group">
-                    <label for="videoFile">Sélectionnez une vidéo</label>
-                    <input type="file" id="videoFile" accept="video/*" class="form-control" required>
-                    <small style="color: var(--text-secondary);">Taille max: 100MB</small>
+
+        <div id="search-section" class="section">
+            <input type="text" id="search-input" placeholder="Rechercher des utilisateurs..." onkeyup="searchUsers()">
+            <div id="search-results"></div>
+        </div>
+
+        <div id="upload-section" class="section">
+            <h2>Publier une vidéo</h2>
+            <form id="upload-form">
+                <div style="border: 2px dashed var(--gray); padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 10px;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary);"></i>
+                    <br><br>
+                    <input type="file" id="video-file" accept="video/*" required style="display: none;">
+                    <button type="button" onclick="document.getElementById('video-file').click()">Choisir une vidéo</button>
+                    <p id="file-name" style="margin-top: 10px; color: var(--text-gray);"></p>
                 </div>
-                <div class="form-group">
-                    <label for="videoDescription">Description</label>
-                    <textarea id="videoDescription" class="form-control" rows="3" placeholder="Décrivez votre vidéo... #hashtags"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="videoMusic">Musique</label>
-                    <input type="text" id="videoMusic" class="form-control" placeholder="Musique de la vidéo">
-                </div>
-                <div class="form-group">
-                    <label for="videoLocation">Lieu</label>
-                    <input type="text" id="videoLocation" class="form-control" placeholder="Où avez-vous filmé?">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="videoPublic" checked>
-                        <span>Rendre la vidéo publique</span>
-                    </label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fas fa-upload"></i> Upload
-                </button>
+                <textarea id="video-desc" placeholder="Description de votre vidéo..."></textarea>
+                <button type="submit" id="upload-btn">Publier</button>
             </form>
         </div>
-    </div>
-    
-    <!-- Story View Modal -->
-    <div id="storyModal" class="modal">
-        <div class="modal-content" style="max-width: 400px; padding: 0;">
-            <div style="position: relative; width: 100%; aspect-ratio: 9/16;">
-                <video id="storyVideo" style="width: 100%; height: 100%; object-fit: cover;" controls></video>
-                <button onclick="closeModal('storyModal')" style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">
-                    <i class="fas fa-times"></i>
-                </button>
+
+        <div id="chat-list-section" class="section">
+            <h2>Messages</h2>
+            <div id="conversations-list"></div>
+        </div>
+
+        <div id="chat-room-section" class="section" style="padding-bottom: 70px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <button onclick="showSection('chat-list-section')" style="width: auto; padding: 5px 15px; margin: 0; margin-right: 10px;">←</button>
+                <h3 id="chat-with-username">Chat</h3>
+            </div>
+            <div id="messages-container" class="message-area"></div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" placeholder="Votre message..." style="margin: 0;">
+                <button onclick="sendMessage()" style="width: 50px; margin: 0;"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
-    </div>
-    
-    <!-- Search Modal -->
-    <div id="searchModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-search"></i> Recherche</h2>
-                <button class="close-modal" onclick="closeModal('searchModal')">&times;</button>
-            </div>
-            <div id="searchResults">
-                <!-- Search results will be loaded here -->
-            </div>
+
+        <div id="profile-section" class="section">
+            <div id="profile-content"></div>
+            <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Déconnexion</button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showSection('home-section')"><i class="fas fa-home"></i></div>
+            <div class="nav-item" onclick="showSection('search-section')"><i class="fas fa-search"></i></div>
+            <div class="nav-item" onclick="showSection('upload-section')"><i class="fas fa-plus-square"></i></div>
+            <div class="nav-item" onclick="showSection('chat-list-section')"><i class="fas fa-comment-alt"></i></div>
+            <div class="nav-item" onclick="showSection('profile-section')"><i class="fas fa-user"></i></div>
         </div>
     </div>
 
     <script>
-        // Configuration
-        const API_BASE_URL = 'https://serv-ynsd.onrender.com';
-        let currentUser = null;
+        // CONFIGURATION
+        const API_URL = "http://127.0.0.1:8000"; // Changer si le serveur est ailleurs
+        const WS_URL = "ws://127.0.0.1:8000/ws";
+        
         let token = localStorage.getItem('token');
-        let currentConversation = null;
-        let ws = null;
-        
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            if (token) {
-                checkAuth();
-            } else {
-                showLoginPage();
-            }
-            
-            setupEventListeners();
-        });
-        
-        // Setup event listeners
-        function setupEventListeners() {
-            // Navigation
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    showSection(this.dataset.section);
-                });
-            });
-            
-            // Upload buttons
-            document.getElementById('uploadVideoBtn').addEventListener('click', showUploadModal);
-            document.getElementById('uploadVideoBtn2').addEventListener('click', showUploadModal);
-            
-            // Upload form
-            document.getElementById('uploadForm').addEventListener('submit', uploadVideo);
-            
-            // Search
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch(this.value);
-                }
-            });
+        let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentChatUserId = null;
+        let socket = null;
+
+        // INIT
+        if (token) {
+            initApp();
         }
-        
-        // Authentication
-        async function checkAuth() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    currentUser = await response.json();
-                    showApp();
-                    loadFeed();
-                    loadStories();
-                    connectWebSocket();
-                } else {
-                    showLoginPage();
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                showLoginPage();
-            }
+
+        // --- AUTHENTIFICATION ---
+
+        function toggleAuth(view) {
+            document.getElementById('auth-section').style.display = view === 'login' ? 'block' : 'none';
+            document.getElementById('register-section').style.display = view === 'register' ? 'block' : 'none';
         }
-        
-        async function login() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
             const formData = new FormData();
-            formData.append('username', username);
-            formData.append('password', password);
-            
+            formData.append('username', document.getElementById('login-username').value);
+            formData.append('password', document.getElementById('login-password').value);
+
             try {
-                const response = await fetch(`${API_BASE_URL}/token`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
+                if (!res.ok) throw new Error('Échec connexion');
+                const data = await res.json();
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    token = data.access_token;
-                    localStorage.setItem('token', token);
-                    checkAuth();
-                } else {
-                    showMessage('Identifiants incorrects', 'danger');
-                }
-            } catch (error) {
-                showMessage('Erreur de connexion', 'danger');
+                token = data.access_token;
+                currentUser = { id: data.user_id, username: data.username, avatar_url: data.avatar_url };
+                
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                initApp();
+            } catch (err) {
+                alert(err.message);
             }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                username: document.getElementById('reg-username').value,
+                password: document.getElementById('reg-password').value,
+                email: document.getElementById('reg-email').value || null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/users/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Erreur");
+                }
+                alert("Compte créé ! Connectez-vous.");
+                toggleAuth('login');
+            } catch (err) {
+                alert("Erreur: " + err.message);
+            }
+        });
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
         }
-        
-        async function register() {
-            const userData = {
-                username: document.getElementById('regUsername').value,
-                password: document.getElementById('regPassword').value,
-                email: document.getElementById('regEmail').value,
-                full_name: document.getElementById('regFullName').value
+
+        function initApp() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('register-section').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            connectWebSocket();
+            loadFeed();
+            loadProfile();
+        }
+
+        // --- NAVIGATION ---
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            // Highlight nav item
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Logique simple pour highlight (optionnel)
+            
+            if (id === 'home-section') loadFeed();
+            if (id === 'chat-list-section') loadConversations();
+            if (id === 'profile-section') loadProfile();
+        }
+
+        // --- WEBSOCKET ---
+        function connectWebSocket() {
+            if (!currentUser.id) return;
+            socket = new WebSocket(`${WS_URL}/${currentUser.id}`);
+            
+            socket.onopen = () => console.log("WS Connecté");
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'new_message') {
+                    showToast(`Message de ${data.sender_username}`);
+                    if (currentChatUserId === data.sender_id) {
+                        appendMessage(data, 'received');
+                    } else {
+                        // Refresh converastion list indicator if open
+                    }
+                }
             };
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/users/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    token = data.access_token;
-                    localStorage.setItem('token', token);
-                    checkAuth();
-                } else {
-                    const error = await response.json();
-                    showMessage(error.detail || 'Erreur d\'inscription', 'danger');
-                }
-            } catch (error) {
-                showMessage('Erreur de connexion', 'danger');
-            }
+            socket.onclose = () => setTimeout(connectWebSocket, 3000); // Reconnexion
         }
-        
-        function logout() {
-            localStorage.removeItem('token');
-            token = null;
-            currentUser = null;
-            if (ws) ws.close();
-            showLoginPage();
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
         }
-        
-        // UI Management
-        function showLoginPage() {
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-        }
-        
-        function showApp() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'flex';
-            
-            // Update user info
-            document.getElementById('userName').textContent = currentUser.username;
-            document.getElementById('userEmail').textContent = currentUser.email || '';
-            document.getElementById('userAvatar').src = currentUser.avatar_url;
-        }
-        
-        function showLoginTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-            document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
-            document.querySelector(`.tab[onclick="showLoginTab('${tab}')"]`).classList.add('active');
-            document.getElementById('loginMessage').textContent = '';
-        }
-        
-        function showMessage(message, type) {
-            const messageEl = document.getElementById('loginMessage');
-            messageEl.textContent = message;
-            messageEl.style.color = type === 'danger' ? 'var(--danger)' : 'var(--success)';
-        }
-        
-        function showSection(sectionId) {
-            // Update nav
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.add('active');
-            
-            // Show section
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(`${sectionId}Section`).classList.add('active');
-            
-            // Load section content
-            switch(sectionId) {
-                case 'feed':
-                    loadFeed();
-                    break;
-                case 'explore':
-                    loadExplore();
-                    break;
-                case 'messages':
-                    loadConversations();
-                    break;
-                case 'notifications':
-                    loadNotifications();
-                    break;
-                case 'profile':
-                    loadProfile();
-                    break;
-            }
-        }
-        
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-        
-        function showUploadModal() {
-            showModal('uploadModal');
-        }
-        
-        // Feed
+
+        // --- FEED & VIDEOS ---
         async function loadFeed() {
-            const feedEl = document.getElementById('videoFeed');
-            feedEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement du feed...</p></div>';
+            const res = await fetch(`${API_URL}/api/feed`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const videos = await res.json();
+            const container = document.getElementById('video-feed');
+            container.innerHTML = '';
+
+            videos.forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'video-card';
+                div.innerHTML = `
+                    <div class="user-head" style="padding:10px;">
+                        <img src="${v.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
+                        <b>${v.username}</b>
+                    </div>
+                    <video src="${v.video_url}" class="video-player" controls loop></video>
+                    <div class="video-info">
+                        <p>${v.description}</p>
+                        <div class="stats">
+                            <span><i class="fas fa-heart"></i> ${v.likes}</span>
+                            <span><i class="fas fa-eye"></i> ${v.views}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- UPLOAD ---
+        document.getElementById('video-file').addEventListener('change', function() {
+            document.getElementById('file-name').innerText = this.files[0] ? this.files[0].name : '';
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('upload-btn');
+            btn.innerText = "Téléchargement en cours...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('video', document.getElementById('video-file').files[0]);
+            formData.append('description', document.getElementById('video-desc').value);
+
+            try {
+                const res = await fetch(`${API_URL}/api/videos/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!res.ok) throw new Error("Erreur upload");
+                alert("Vidéo publiée avec succès !");
+                document.getElementById('upload-form').reset();
+                showSection('home-section');
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.innerText = "Publier";
+                btn.disabled = false;
+            }
+        });
+
+        // --- CHAT ---
+        async function loadConversations() {
+            const res = await fetch(`${API_URL}/api/messages/conversations`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const convs = await res.json();
+            const list = document.getElementById('conversations-list');
+            list.innerHTML = '';
+
+            convs.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'chat-list-item';
+                div.innerHTML = `
+                    <img src="${c.avatar_url || 'https://via.placeholder.com/50'}" class="avatar">
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <b>${c.username}</b>
+                            <small>${new Date(c.last_message_time).toLocaleTimeString()}</small>
+                        </div>
+                        <p style="color:var(--text-gray);">${c.last_message || '...'}</p>
+                    </div>
+                    ${c.unread_count > 0 ? `<span style="background:red; border-radius:50%; padding:2px 6px; font-size:12px;">${c.unread_count}</span>` : ''}
+                `;
+                div.onclick = () => openChat(c.user_id, c.username);
+                list.appendChild(div);
+            });
+        }
+
+        async function openChat(userId, username) {
+            currentChatUserId = userId;
+            document.getElementById('chat-with-username').innerText = username;
+            showSection('chat-room-section');
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/videos/feed`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const videos = await response.json();
-                    displayVideos(videos, feedEl);
-                }
-            } catch (error) {
-                console.error('Error loading feed:', error);
-                feedEl.innerHTML = '<p>Erreur de chargement du feed</p>';
-            }
-        }
-        
-        async function loadExplore() {
-            const exploreEl = document.getElementById('exploreVideos');
-            exploreEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement des vidéos...</p></div>';
+            const res = await fetch(`${API_URL}/api/messages/${userId}?limit=50`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const msgs = await res.json(); // Le backend les renvoie inversés pour l'affichage
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/explore`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const videos = await response.json();
-                    displayVideos(videos, exploreEl);
-                }
-            } catch (error) {
-                console.error('Error loading explore:', error);
-                exploreEl.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-        
-        async function loadStories() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/stories/feed`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const stories = await response.json();
-                    displayStories(stories);
-                }
-            } catch (error) {
-                console.error('Error loading stories:', error);
-            }
-        }
-        
-        function displayStories(stories) {
-            const container = document.getElementById('storiesContainer');
+            const container = document.getElementById('messages-container');
             container.innerHTML = '';
             
-            // Add your story
-            container.innerHTML += `
-                <div class="story-item" onclick="createStory()">
-                    <div style="position: relative;">
-                        <img src="${currentUser.avatar_url}" class="story-avatar">
-                        <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-plus"></i>
-                        </div>
-                    </div>
-                    <div class="story-username">Votre story</div>
-                </div>
-            `;
+            // Le backend renvoie du plus récent au plus ancien, on doit inverser pour afficher
+            // Mais dans ton code backend `reversed(messages)` est fait, donc on les reçoit chronologiquement ?
+            // On va assumer qu'on les reçoit dans l'ordre chronologique pour l'affichage
             
-            // Add other stories
-            stories.forEach(storyGroup => {
-                const story = storyGroup.stories[0];
-                container.innerHTML += `
-                    <div class="story-item" onclick="viewStory('${story.id}')">
-                        <img src="${storyGroup.user.avatar_url}" class="story-avatar" style="${story.viewed ? '' : 'border-color: var(--primary)'}">
-                        <div class="story-username">${storyGroup.user.username}</div>
-                    </div>
-                `;
+            msgs.forEach(m => {
+                appendMessage(m, m.sender_id === currentUser.id ? 'sent' : 'received');
             });
+            scrollToBottom();
         }
-        
-        function displayVideos(videos, containerEl) {
-            if (videos.length === 0) {
-                containerEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Aucune vidéo disponible</p>';
-                return;
-            }
-            
-            containerEl.innerHTML = '';
-            
-            videos.forEach(video => {
-                const videoEl = document.createElement('div');
-                videoEl.className = 'video-card';
-                videoEl.innerHTML = `
-                    <div class="video-header">
-                        <img src="${video.avatar_url}" class="video-avatar">
-                        <div class="video-user-info">
-                            <div class="video-username">
-                                ${video.username}
-                                ${video.is_verified ? '<i class="fas fa-check-circle" style="color: var(--primary); font-size: 12px;"></i>' : ''}
-                            </div>
-                            <div class="video-time">${formatTime(video.created_at)}</div>
-                        </div>
-                    </div>
-                    <div class="video-container">
-                        <video src="${video.video_url}" poster="${video.thumbnail_url}" controls></video>
-                    </div>
-                    <div class="video-actions">
-                        <div class="action-buttons">
-                            <div>
-                                <button class="action-btn ${video.liked_by_me ? 'liked' : ''}" onclick="likeVideo('${video.id}')">
-                                    <i class="fas fa-heart"></i>
-                                    <span class="action-count">${video.likes_count}</span>
-                                </button>
-                            </div>
-                            <div>
-                                <button class="action-btn" onclick="showComments('${video.id}')">
-                                    <i class="fas fa-comment"></i>
-                                    <span class="action-count">${video.comments_count}</span>
-                                </button>
-                                <button class="action-btn">
-                                    <i class="fas fa-share"></i>
-                                    <span class="action-count">${video.shares_count || 0}</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="video-description">
-                            ${formatDescription(video.description)}
-                            <div class="video-hashtags">${extractHashtags(video.description)}</div>
-                        </div>
-                    </div>
-                `;
-                containerEl.appendChild(videoEl);
-            });
+
+        function appendMessage(msg, type) {
+            const container = document.getElementById('messages-container');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerText = msg.content;
+            container.appendChild(div);
+            scrollToBottom();
         }
-        
-        async function likeVideo(videoId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/like`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    loadFeed(); // Reload feed
-                }
-            } catch (error) {
-                console.error('Error liking video:', error);
-            }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
         }
-        
-        // Upload
-        async function uploadVideo(e) {
-            e.preventDefault();
-            
-            const fileInput = document.getElementById('videoFile');
-            const description = document.getElementById('videoDescription').value;
-            const music = document.getElementById('videoMusic').value;
-            const location = document.getElementById('videoLocation').value;
-            const isPublic = document.getElementById('videoPublic').checked;
-            
-            if (!fileInput.files.length) {
-                alert('Veuillez sélectionner une vidéo');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('video', fileInput.files[0]);
-            formData.append('description', description);
-            formData.append('music', music);
-            formData.append('location', location);
-            formData.append('is_public', isPublic);
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/videos/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    closeModal('uploadModal');
-                    loadFeed();
-                    alert('Vidéo uploadée avec succès!');
-                } else {
-                    const error = await response.json();
-                    alert(error.detail || 'Erreur lors de l\'upload');
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Erreur de connexion');
-            }
-        }
-        
-        // Stories
-        async function createStory() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'video/*';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const formData = new FormData();
-                formData.append('video', file);
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/stories`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        loadStories();
-                    }
-                } catch (error) {
-                    console.error('Error creating story:', error);
-                }
-            };
-            input.click();
-        }
-        
-        async function viewStory(storyId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/stories/${storyId}/view`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    // In a real app, you would get the story URL and play it
-                    showModal('storyModal');
-                }
-            } catch (error) {
-                console.error('Error viewing story:', error);
-            }
-        }
-        
-        // Messages
-        async function loadConversations() {
-            const listEl = document.getElementById('conversationsList');
-            listEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement des conversations...</p></div>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/messages/conversations`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const conversations = await response.json();
-                    displayConversations(conversations);
-                }
-            } catch (error) {
-                console.error('Error loading conversations:', error);
-                listEl.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-        
-        function displayConversations(conversations) {
-            const listEl = document.getElementById('conversationsList');
-            listEl.innerHTML = '';
-            
-            if (conversations.length === 0) {
-                listEl.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary);">Aucune conversation</p>';
-                return;
-            }
-            
-            conversations.forEach(conv => {
-                const convEl = document.createElement('div');
-                convEl.className = 'conversation-item';
-                convEl.onclick = () => openConversation(conv.user_id);
-                convEl.innerHTML = `
-                    <img src="${conv.avatar_url}" class="conversation-avatar">
-                    <div class="conversation-info">
-                        <div class="conversation-name">${conv.username}</div>
-                        <div class="conversation-last">${conv.last_message}</div>
-                    </div>
-                    ${conv.unread_count > 0 ? `<div class="unread-badge">${conv.unread_count}</div>` : ''}
-                `;
-                listEl.appendChild(convEl);
-            });
-        }
-        
-        async function openConversation(userId) {
-            currentConversation = userId;
-            document.getElementById('chatContainer').style.display = 'flex';
-            
-            // Load conversation header
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const user = await response.json();
-                    document.getElementById('chatHeader').innerHTML = `
-                        <img src="${user.avatar_url}" style="width: 40px; height: 40px; border-radius: 50%;">
-                        <div>
-                            <div style="font-weight: bold;">${user.username}</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">En ligne</div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading user:', error);
-            }
-            
-            // Load messages
-            loadMessages(userId);
-        }
-        
-        async function loadMessages(userId) {
-            const messagesEl = document.getElementById('chatMessages');
-            messagesEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement des messages...</p></div>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/messages/${userId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const messages = await response.json();
-                    displayMessages(messages);
-                }
-            } catch (error) {
-                console.error('Error loading messages:', error);
-                messagesEl.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-        
-        function displayMessages(messages) {
-            const messagesEl = document.getElementById('chatMessages');
-            messagesEl.innerHTML = '';
-            
-            messages.forEach(msg => {
-                const msgEl = document.createElement('div');
-                msgEl.className = `message ${msg.sender_id === currentUser.id ? 'sent' : 'received'}`;
-                msgEl.innerHTML = `
-                    <div>${msg.content}</div>
-                    <div style="font-size: 10px; text-align: right; margin-top: 5px;">${formatTime(msg.created_at)}</div>
-                `;
-                messagesEl.appendChild(msgEl);
-            });
-            
-            messagesEl.scrollTop = messagesEl.scrollHeight;
-        }
-        
+
         async function sendMessage() {
-            const input = document.getElementById('messageInput');
+            const input = document.getElementById('msg-input');
             const content = input.value.trim();
+            if (!content || !currentChatUserId) return;
+
+            input.value = ''; // Clear immediately
             
-            if (!content || !currentConversation) return;
-            
+            // Optimistic UI update
+            appendMessage({ content: content }, 'sent');
+
             try {
-                const response = await fetch(`${API_BASE_URL}/api/messages`, {
+                await fetch(`${API_URL}/api/messages/send`, {
                     method: 'POST',
-                    headers: {
+                    headers: { 
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        receiver_id: currentConversation,
-                        content: content
+                        receiver_id: currentChatUserId,
+                        content: content,
+                        type: 'text'
                     })
                 });
-                
-                if (response.ok) {
-                    input.value = '';
-                    loadMessages(currentConversation);
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
+                // Le message est aussi renvoyé par le socket "message_sent", on ignore ici pour éviter doublon
+            } catch (err) {
+                console.error(err);
+                alert("Erreur envoi");
             }
         }
-        
-        // Notifications
-        async function loadNotifications() {
-            const listEl = document.getElementById('notificationsList');
-            listEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement des notifications...</p></div>';
+
+        // --- SEARCH ---
+        async function searchUsers() {
+            const q = document.getElementById('search-input').value;
+            if (q.length < 2) return;
+
+            const res = await fetch(`${API_URL}/api/search?q=${q}&type=users`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const users = await res.json();
+            const div = document.getElementById('search-results');
+            div.innerHTML = '';
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/notifications`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const notifications = await response.json();
-                    displayNotifications(notifications);
-                }
-            } catch (error) {
-                console.error('Error loading notifications:', error);
-                listEl.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-        
-        function displayNotifications(notifications) {
-            const listEl = document.getElementById('notificationsList');
-            listEl.innerHTML = '';
-            
-            if (notifications.length === 0) {
-                listEl.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary);">Aucune notification</p>';
-                return;
-            }
-            
-            notifications.forEach(notif => {
-                const notifEl = document.createElement('div');
-                notifEl.className = `notification-item ${notif.is_read ? '' : 'unread'}`;
-                
-                let message = '';
-                switch(notif.type) {
-                    case 'like':
-                        message = `${notif.from_username} a aimé votre vidéo`;
-                        break;
-                    case 'comment':
-                        message = `${notif.from_username} a commenté votre vidéo`;
-                        break;
-                    case 'follow':
-                        message = `${notif.from_username} vous suit maintenant`;
-                        break;
-                    case 'message':
-                        message = `${notif.from_username} vous a envoyé un message`;
-                        break;
-                    default:
-                        message = `Nouvelle notification de ${notif.from_username}`;
-                }
-                
-                notifEl.innerHTML = `
-                    <img src="${notif.from_avatar}" style="width: 50px; height: 50px; border-radius: 50%;">
-                    <div style="flex: 1;">
-                        <div>${message}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${formatTime(notif.created_at)}</div>
-                    </div>
+            users.forEach(u => {
+                const el = document.createElement('div');
+                el.className = 'chat-list-item';
+                el.innerHTML = `
+                    <img src="${u.avatar_url || 'https://via.placeholder.com/40'}" class="avatar">
+                    <b>${u.username}</b>
+                    <button style="width:auto; margin-left:auto; padding:5px 10px;" onclick="openChat('${u.id}', '${u.username}')">Message</button>
                 `;
-                listEl.appendChild(notifEl);
+                div.appendChild(el);
             });
         }
-        
-        // Profile
+
+        // --- PROFILE ---
         async function loadProfile() {
-            const profileEl = document.getElementById('profileContent');
-            profileEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement du profil...</p></div>';
+            const res = await fetch(`${API_URL}/api/users/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const user = await response.json();
-                    displayProfile(user);
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-                profileEl.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-        
-        function displayProfile(user) {
-            const profileEl = document.getElementById('profileContent');
-            profileEl.innerHTML = `
+            document.getElementById('profile-content').innerHTML = `
                 <div class="profile-header">
-                    <div class="profile-cover" style="${user.cover_url ? `background: url('${user.cover_url}') center/cover;` : ''}"></div>
-                    <div class="profile-info">
-                        <img src="${user.avatar_url}" class="profile-avatar">
-                        <div class="profile-details">
-                            <div class="profile-name">${user.full_name || user.username}</div>
-                            <div class="profile-username">@${user.username}</div>
-                            <div class="profile-bio">${user.bio || 'Pas de bio'}</div>
-                            <div class="profile-stats">
-                                <div class="stat-item">
-                                    <div class="stat-count">${user.videos_count || 0}</div>
-                                    <div class="stat-label">Vidéos</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-count">${user.followers_count || 0}</div>
-                                    <div class="stat-label">Abonnés</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-count">${user.following_count || 0}</div>
-                                    <div class="stat-label">Abonnements</div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn" onclick="editProfile()" style="background: rgba(255,255,255,0.1); color: white;">
-                            <i class="fas fa-edit"></i> Modifier
-                        </button>
-                    </div>
+                    <img src="${data.avatar_url || 'https://via.placeholder.com/100'}" class="profile-avatar">
+                    <h2>${data.username}</h2>
+                    <p>${data.bio || "Pas de bio"}</p>
                 </div>
-                <div id="profileVideos">
-                    <h3 style="margin-bottom: 20px;">Mes vidéos</h3>
-                    <div id="userVideosList"></div>
+                <div class="profile-stats">
+                    <div class="stat-box">
+                        <div class="stat-num">${data.followers_count}</div>
+                        <div class="stat-label">Abonnés</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">${data.following_count}</div>
+                        <div class="stat-label">Abonnements</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">${data.likes_received}</div>
+                        <div class="stat-label">J'aime</div>
+                    </div>
                 </div>
             `;
-            
-            loadUserVideos(user.id);
-        }
-        
-        async function loadUserVideos(userId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/users/${userId}/videos`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const videos = await response.json();
-                    displayUserVideos(videos);
-                }
-            } catch (error) {
-                console.error('Error loading user videos:', error);
-            }
-        }
-        
-        function displayUserVideos(videos) {
-            const listEl = document.getElementById('userVideosList');
-            
-            if (videos.length === 0) {
-                listEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Aucune vidéo</p>';
-                return;
-            }
-            
-            listEl.innerHTML = '';
-            videos.forEach(video => {
-                const videoEl = document.createElement('div');
-                videoEl.className = 'video-card';
-                videoEl.style.maxWidth = '400px';
-                videoEl.innerHTML = `
-                    <div class="video-container">
-                        <video src="${video.video_url}" poster="${video.thumbnail_url}" controls></video>
-                    </div>
-                    <div class="video-description" style="padding: 15px;">
-                        ${formatDescription(video.description)}
-                        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
-                            <span><i class="fas fa-heart"></i> ${video.likes_count}</span>
-                            <span><i class="fas fa-comment"></i> ${video.comments_count}</span>
-                            <span><i class="fas fa-eye"></i> ${video.view_count}</span>
-                        </div>
-                    </div>
-                `;
-                listEl.appendChild(videoEl);
-            });
-        }
-        
-        function editProfile() {
-            // In a real app, you would show an edit form
-            alert('Fonctionnalité d\'édition du profil à venir!');
-        }
-        
-        // Search
-        async function performSearch(query) {
-            showModal('searchModal');
-            const resultsEl = document.getElementById('searchResults');
-            resultsEl.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Recherche en cours...</p></div>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(query)}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const results = await response.json();
-                    displaySearchResults(results);
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                resultsEl.innerHTML = '<p>Erreur de recherche</p>';
-            }
-        }
-        
-        function displaySearchResults(results) {
-            const resultsEl = document.getElementById('searchResults');
-            resultsEl.innerHTML = '';
-            
-            // Users
-            if (results.users.length > 0) {
-                resultsEl.innerHTML += '<h3 style="margin: 20px 0 10px;">Utilisateurs</h3>';
-                results.users.forEach(user => {
-                    resultsEl.innerHTML += `
-                        <div class="notification-item" onclick="viewProfile('${user.id}')" style="cursor: pointer;">
-                            <img src="${user.avatar_url}" style="width: 50px; height: 50px; border-radius: 50%;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: bold;">${user.username}</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">${user.full_name || ''}</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">${user.followers_count || 0} abonnés</div>
-                            </div>
-                            ${user.is_following ? '<span style="color: var(--text-secondary);">Déjà suivi</span>' : 
-                            '<button class="btn" style="padding: 5px 10px; font-size: 12px;">Suivre</button>'}
-                        </div>
-                    `;
-                });
-            }
-            
-            // Videos
-            if (results.videos.length > 0) {
-                resultsEl.innerHTML += '<h3 style="margin: 20px 0 10px;">Vidéos</h3>';
-                results.videos.forEach(video => {
-                    resultsEl.innerHTML += `
-                        <div class="video-card" style="margin-bottom: 15px;">
-                            <div class="video-container">
-                                <video src="${video.video_url}" poster="${video.thumbnail_url}" controls></video>
-                            </div>
-                            <div class="video-description" style="padding: 15px;">
-                                ${formatDescription(video.description)}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            // Hashtags
-            if (results.hashtags.length > 0) {
-                resultsEl.innerHTML += '<h3 style="margin: 20px 0 10px;">Hashtags</h3>';
-                results.hashtags.forEach(tag => {
-                    resultsEl.innerHTML += `
-                        <div class="notification-item" onclick="viewHashtag('${tag.name}')" style="cursor: pointer;">
-                            <div style="font-size: 24px; color: var(--primary);">#</div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: bold;">${tag.name}</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">${tag.video_count} vidéos</div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            if (results.users.length === 0 && results.videos.length === 0 && results.hashtags.length === 0) {
-                resultsEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Aucun résultat</p>';
-            }
-        }
-        
-        function viewProfile(userId) {
-            showSection('profile');
-            // You would load the specific user's profile here
-            closeModal('searchModal');
-        }
-        
-        function viewHashtag(hashtag) {
-            closeModal('searchModal');
-            alert(`Voir les vidéos avec #${hashtag} - Fonctionnalité à venir!`);
-        }
-        
-        // WebSocket
-        function connectWebSocket() {
-            if (!currentUser || !currentUser.id) return;
-            
-            ws = new WebSocket(`wss://serv-ynsd.onrender.com/ws/${currentUser.id}`);
-            
-            ws.onopen = () => {
-                console.log('WebSocket connecté');
-            };
-            
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleWebSocketMessage(data);
-            };
-            
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
-            
-            ws.onclose = () => {
-                console.log('WebSocket déconnecté');
-                // Try to reconnect after 5 seconds
-                setTimeout(connectWebSocket, 5000);
-            };
-        }
-        
-        function handleWebSocketMessage(data) {
-            switch(data.type) {
-                case 'message':
-                    if (currentConversation === data.sender_id) {
-                        loadMessages(data.sender_id);
-                    } else {
-                        // Update unread count
-                        updateUnreadMessages();
-                    }
-                    break;
-                    
-                case 'notification':
-                    // Update unread count
-                    updateUnreadNotifications();
-                    break;
-            }
-        }
-        
-        async function updateUnreadMessages() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/messages/conversations`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const conversations = await response.json();
-                    const unread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
-                    
-                    const badge = document.getElementById('unreadMessages');
-                    if (unread > 0) {
-                        badge.textContent = unread;
-                        badge.style.display = 'inline-block';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-            } catch (error) {
-                console.error('Error updating unread messages:', error);
-            }
-        }
-        
-        async function updateUnreadNotifications() {
-            const badge = document.getElementById('unreadNotifications');
-            // In a real app, you would fetch the actual count
-            badge.style.display = 'inline-block';
-        }
-        
-        // Utility functions
-        function formatTime(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 60) {
-                return `Il y a ${diffMins} min`;
-            } else if (diffHours < 24) {
-                return `Il y a ${diffHours} h`;
-            } else if (diffDays < 7) {
-                return `Il y a ${diffDays} j`;
-            } else {
-                return date.toLocaleDateString();
-            }
-        }
-        
-        function formatDescription(text) {
-            if (!text) return '';
-            return text.replace(/\n/g, '<br>');
-        }
-        
-        function extractHashtags(text) {
-            if (!text) return '';
-            const hashtags = text.match(/#\w+/g);
-            if (!hashtags) return '';
-            return hashtags.map(tag => `<span style="color: var(--primary); margin-right: 5px;">${tag}</span>`).join('');
-        }
-        
-        function showComments(videoId) {
-            alert(`Commentaires pour la vidéo ${videoId} - Fonctionnalité à venir!`);
         }
     </script>
 </body>
