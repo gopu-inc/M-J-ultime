@@ -1,141 +1,167 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M&J Hub - Ultimate App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>M&J Ultimate</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <div id="auth-screen" class="screen active">
+    <div id="loader-screen" class="full-screen flex-center">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="auth-screen" class="full-screen hidden">
         <div class="auth-box">
-            <h1 class="logo">M&J <span>Hub</span></h1>
+            <h1>M&J <span class="accent">Ultimate</span></h1>
             
             <div id="login-form">
-                <h2>Connexion</h2>
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="login-username" placeholder="Nom d'utilisateur">
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="login-password" placeholder="Mot de passe">
-                </div>
+                <input type="text" id="login-user" placeholder="Nom d'utilisateur" autocomplete="username">
+                <input type="password" id="login-pass" placeholder="Mot de passe" autocomplete="current-password">
                 <button onclick="app.login()" class="btn-primary">Se connecter</button>
-                <p class="switch-auth">Pas de compte ? <span onclick="ui.toggleAuth('register')">S'inscrire</span></p>
+                <p class="switch-link" onclick="ui.toggleAuth('register')">Créer un compte</p>
             </div>
 
             <div id="register-form" class="hidden">
-                <h2>Inscription</h2>
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="reg-username" placeholder="Nom d'utilisateur">
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="reg-email" placeholder="Email (Optionnel)">
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="reg-password" placeholder="Mot de passe">
-                </div>
-                <button onclick="app.register()" class="btn-primary">Créer mon compte</button>
-                <p class="switch-auth">Déjà un compte ? <span onclick="ui.toggleAuth('login')">Se connecter</span></p>
+                <input type="text" id="reg-user" placeholder="Nom d'utilisateur choisi">
+                <input type="email" id="reg-email" placeholder="Email (facultatif)">
+                <input type="password" id="reg-pass" placeholder="Mot de passe">
+                <button onclick="app.register()" class="btn-primary">S'inscrire</button>
+                <p class="switch-link" onclick="ui.toggleAuth('login')">J'ai déjà un compte</p>
             </div>
         </div>
     </div>
 
-    <div id="app-screen" class="screen hidden">
-        <nav class="sidebar">
-            <div class="logo-small">M&J</div>
-            <ul class="nav-links">
-                <li onclick="ui.showSection('dashboard')" class="active"><i class="fas fa-home"></i> <span>Accueil</span></li>
-                <li onclick="ui.showSection('feed')"><i class="fas fa-play-circle"></i> <span>Vidéos</span></li>
-                <li onclick="ui.showSection('chat')"><i class="fas fa-comments"></i> <span>Chat</span></li>
-                <li onclick="ui.showSection('profile')"><i class="fas fa-user"></i> <span>Profil</span></li>
-            </ul>
-            <div class="nav-footer">
-                <button onclick="app.logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+    <div id="app-screen" class="full-screen hidden">
+        
+        <header class="top-bar">
+            <div class="logo-text">M&J</div>
+            <div class="top-actions">
+                <i class="fas fa-search" onclick="ui.showSearch()"></i>
+                <div class="notification-badge-container" onclick="ui.showSection('notifications')">
+                    <i class="fas fa-bell"></i>
+                    <span id="notif-count" class="badge hidden">0</span>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            
+            <section id="feed-section" class="active-section">
+                <div id="feed-container" class="feed-grid"></div>
+                <div id="feed-loader" class="spinner small hidden"></div>
+            </section>
+
+            <section id="search-section">
+                <div class="search-bar-container">
+                    <input type="text" id="search-input" placeholder="Rechercher utilisateurs ou vidéos..." onkeyup="app.search(this.value)">
+                </div>
+                <div id="search-results"></div>
+            </section>
+
+            <section id="upload-section" class="flex-center col">
+                <h2>Publier</h2>
+                <div class="upload-box">
+                    <input type="file" id="video-file" accept="video/*" style="display:none" onchange="ui.previewVideo()">
+                    <button onclick="document.getElementById('video-file').click()" class="btn-outline">
+                        <i class="fas fa-video"></i> Choisir une vidéo
+                    </button>
+                    <div id="video-preview-container" class="hidden">
+                        <span id="file-name"></span>
+                    </div>
+                    <textarea id="video-desc" placeholder="Description de la vidéo..."></textarea>
+                    
+                    <div class="switch-container">
+                        <label>Public</label>
+                        <input type="checkbox" id="video-public" checked>
+                    </div>
+
+                    <button onclick="app.uploadVideo()" class="btn-primary" id="btn-upload">Publier</button>
+                </div>
+                
+                <div class="divider">OU</div>
+
+                <button onclick="app.startLiveConfig()" class="btn-live">
+                    <i class="fas fa-broadcast-tower"></i> Lancer un Live
+                </button>
+            </section>
+
+            <section id="chat-section">
+                <div id="conversations-list"></div>
+                
+                <div id="chat-view" class="chat-overlay hidden">
+                    <div class="chat-header">
+                        <i class="fas fa-arrow-left" onclick="ui.closeChat()"></i>
+                        <span id="chat-target-username">Utilisateur</span>
+                        <div id="chat-status" class="status-dot"></div>
+                    </div>
+                    <div id="messages-container"></div>
+                    <div class="chat-input-bar">
+                        <input type="text" id="msg-input" placeholder="Votre message...">
+                        <button onclick="app.sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lives-section">
+                <h2>Lives en cours</h2>
+                <div id="lives-container" class="lives-grid"></div>
+            </section>
+
+            <section id="notifications-section">
+                <h2>Notifications</h2>
+                <div id="notif-list"></div>
+            </section>
+
+            <section id="profile-section">
+                <div id="profile-content"></div>
+                <button onclick="app.logout()" class="btn-danger mt-20">Déconnexion</button>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="ui.showSection('feed')">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="nav-item" onclick="ui.showSection('lives')">
+                <i class="fas fa-tv"></i>
+            </div>
+            <div class="nav-item upload-btn-wrapper" onclick="ui.showSection('upload')">
+                <div class="upload-btn"><i class="fas fa-plus"></i></div>
+            </div>
+            <div class="nav-item" onclick="ui.showSection('chat')">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <div class="nav-item" onclick="ui.showSection('profile')">
+                <i class="fas fa-user"></i>
             </div>
         </nav>
 
-        <main class="main-content">
-            <header class="top-bar">
-                <h2 id="page-title">Tableau de bord</h2>
-                <div class="user-status">
-                    <span class="status-dot online"></span>
-                    <span id="current-username">Utilisateur</span>
+        <div id="live-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Configuration du Live</h3>
+                <p>Copiez ces infos dans OBS ou une app de stream mobile (ex: Prism Live).</p>
+                <div class="key-box">
+                    <small>Serveur RTMP:</small>
+                    <input type="text" readonly value="rtmp://mj-hub.onrender.com:1935/live">
                 </div>
-            </header>
+                <div class="key-box">
+                    <small>Clé de Stream:</small>
+                    <input type="text" id="stream-key-display" readonly>
+                </div>
+                <button onclick="app.stopLive()" class="btn-danger">Arrêter le Live</button>
+                <button onclick="document.getElementById('live-modal').classList.add('hidden')" class="btn-outline">Fermer</button>
+            </div>
+        </div>
 
-            <section id="dashboard-section" class="content-section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-users"></i>
-                        <h3 id="stat-online">0</h3>
-                        <p>En ligne</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-video"></i>
-                        <h3 id="stat-videos">0</h3>
-                        <p>Vidéos</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-broadcast-tower"></i>
-                        <h3 id="stat-lives">0</h3>
-                        <p>Lives Actifs</p>
-                    </div>
-                </div>
-                <div class="welcome-banner">
-                    <h3>Bienvenue sur M&J Hub</h3>
-                    <p>La plateforme ultime pour votre serveur.</p>
-                </div>
-            </section>
-
-            <section id="feed-section" class="content-section">
-                <div id="video-grid" class="video-grid">
-                    <div class="loader">Chargement...</div>
-                </div>
-            </section>
-
-            <section id="chat-section" class="content-section">
-                <div class="chat-container">
-                    <div class="chat-sidebar">
-                        <h3>Conversations</h3>
-                        <div id="conversations-list">
-                            </div>
-                    </div>
-                    <div class="chat-window">
-                        <div id="chat-placeholder">
-                            <i class="fas fa-comments"></i>
-                            <p>Sélectionnez une conversation</p>
-                        </div>
-                        <div id="chat-active" class="hidden">
-                            <div class="chat-header">
-                                <span id="chat-target-name">Nom</span>
-                            </div>
-                            <div id="messages-area" class="messages-area">
-                                </div>
-                            <div class="chat-input-area">
-                                <input type="text" id="message-input" placeholder="Écrire un message...">
-                                <button onclick="app.sendMessage()"><i class="fas fa-paper-plane"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="profile-section" class="content-section">
-                <div id="profile-card" class="profile-card">
-                    <div class="loader">Chargement...</div>
-                </div>
-            </section>
-        </main>
     </div>
 
     <script src="script.js"></script>
