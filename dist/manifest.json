@@ -1,21 +1,21 @@
 {
-    "name": "M&J Ultimate",
-    "short_name": "M&J",
-    "description": "Plateforme sociale avec vidéos, chat et lives",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#0a0a0a",
-    "theme_color": "#FF0050",
-    "icons": [
-        {
-            "src": "/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "name": "M&J Ultimate",
+  "short_name": "M&J App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FF0050",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3669/3669968.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3669/3669968.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
