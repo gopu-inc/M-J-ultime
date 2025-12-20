@@ -1,109 +1,120 @@
+
 // --- CONFIGURATION ---
 const API_URL = "https://mj-hub.onrender.com";
-const WS_URL = "wss://mj-hub.onrender.com/ws"; // WebSocket Secure
+const WS_URL = "wss://mj-hub.onrender.com/ws"; 
 
-// --- ÉTAT GLOBAL ---
+// --- STATE MANAGEMENT ---
 const state = {
-    token: localStorage.getItem('token'),
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    token: localStorage.getItem('mj_token'),
+    user: JSON.parse(localStorage.getItem('mj_user') || 'null'),
     socket: null,
-    activeChatId: null,
-    conversations: [],
-    notifications: []
+    activeChat: null,
+    feedCursor: null,
+    isLoading: false,
+    hls: null
 };
 
-// --- GESTION INTERFACE (UI) ---
+// --- API HELPER ---
+const api = async (endpoint, options = {}) => {
+    const headers = { 'Authorization': `Bearer ${state.token}` };
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers: { ...headers, ...options.headers } });
+    if (res.status === 401) app.logout();
+    return res.json();
+};
+
+// --- UI CONTROLLER ---
 const ui = {
-    toggleAuth: (mode) => {
-        document.getElementById('login-form').classList.toggle('hidden', mode === 'register');
-        document.getElementById('register-form').classList.toggle('hidden', mode === 'login');
+    showSplash: () => setTimeout(() => document.getElementById('splash-screen').classList.add('hidden'), 2000),
+    
+    toggleAuthMode: () => {
+        const isRegister = document.getElementById('btn-login').classList.contains('hidden');
+        document.getElementById('btn-login').classList.toggle('hidden');
+        document.getElementById('btn-register').classList.toggle('hidden');
+        document.getElementById('email-group').classList.toggle('hidden');
+        document.getElementById('switch-text').innerText = isRegister ? 'Pas de compte ?' : 'Déjà un compte ?';
     },
 
-    showSection: (sectionId) => {
-        // Mettre à jour la nav
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        // Trouver l'icône correspondante (logique simple basée sur l'ordre)
-        const mapping = {'feed':0, 'lives':1, 'upload':2, 'chat':3, 'profile':4};
-        if(mapping[sectionId] !== undefined) document.querySelectorAll('.nav-item')[mapping[sectionId]].classList.add('active');
-
-        // Afficher la section
-        document.querySelectorAll('section').forEach(el => el.classList.remove('active-section'));
-        const target = document.getElementById(`${sectionId}-section`);
-        if(target) target.classList.add('active-section');
-
-        // Recharger les données si nécessaire
-        if (sectionId === 'feed') app.loadFeed();
-        if (sectionId === 'lives') app.loadLives();
-        if (sectionId === 'chat') app.loadConversations();
-        if (sectionId === 'notifications') app.loadNotifications();
-        if (sectionId === 'profile') app.loadProfile('me');
+    toast: (msg, type='info') => {
+        const t = document.getElementById('toast-overlay');
+        const el = document.createElement('div');
+        el.className = `toast-msg ${type}`;
+        el.innerText = msg;
+        el.style.cssText = `position:fixed; top:50px; left:50%; transform:translateX(-50%); background:${type==='error'?'#ff3b30':'#34c759'}; color:white; padding:10px 20px; border-radius:20px; font-weight:600; z-index:9999; box-shadow:0 4px 10px rgba(0,0,0,0.3); animation: fadeIn 0.3s;`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
     },
 
-    toast: (msg, isError = false) => {
-        const div = document.createElement('div');
-        div.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: ${isError?'#ff2a2a':'#00d26a'}; color: white; padding: 10px 20px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);`;
-        div.textContent = msg;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 3000);
+    goToSection: (sec) => {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(`${sec}-section`).classList.remove('hidden');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        // Highlight logic
+        const mapping = { 'feed': 0, 'lives': 1, 'chat': 3, 'profile': 4 };
+        if (mapping[sec] !== undefined) document.querySelectorAll('.nav-btn')[mapping[sec]].classList.add('active');
+        
+        if(sec === 'feed') app.playVisibleVideo();
+        else app.pauseAllVideos();
+
+        if(sec === 'lives') app.loadLives();
+        if(sec === 'chat') app.loadConversations();
+        if(sec === 'profile') app.loadProfile();
     },
 
-    showSearch: () => {
-        ui.showSection('search');
-        document.getElementById('search-input').focus();
+    openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+    closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+    
+    handleFileSelect: (input) => {
+        const file = input.files[0];
+        if(file) document.getElementById('file-preview').innerText = `Sélectionné: ${file.name}`;
     },
 
-    closeChat: () => {
-        document.getElementById('chat-view').classList.add('hidden');
-        state.activeChatId = null;
-        app.loadConversations(); // Rafraichir la liste
-    },
-
-    previewVideo: () => {
-        const file = document.getElementById('video-file').files[0];
-        if(file) {
-            document.getElementById('video-preview-container').classList.remove('hidden');
-            document.getElementById('file-name').textContent = `Fichier: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
-        }
+    previewAvatar: (input) => {
+        const file = input.files[0];
+        if(file) document.getElementById('edit-avatar-preview').src = URL.createObjectURL(file);
     }
 };
 
-// --- LOGIQUE APPLICATIVE (APP) ---
+// --- APP LOGIC ---
 const app = {
     init: () => {
+        ui.showSplash();
         if (state.token) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             app.connectWS();
-            ui.showSection('feed');
-            app.loadNotifications(); // Pour le badge
+            app.loadFeed();
         } else {
             document.getElementById('auth-screen').classList.remove('hidden');
         }
-        document.getElementById('loader-screen').classList.add('hidden');
+        
+        // Scroll Observer for Auto-play
+        document.getElementById('video-scroller').addEventListener('scroll', app.handleScroll);
     },
 
-    // --- AUTHENTIFICATION ---
+    // AUTH
     login: async () => {
-        const u = document.getElementById('login-user').value;
-        const p = document.getElementById('login-pass').value;
-        if(!u || !p) return ui.toast('Remplissez tout', true);
-
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const fd = new URLSearchParams(); fd.append('username', u); fd.append('password', p);
+        
         try {
-            const fd = new URLSearchParams(); fd.append('username', u); fd.append('password', p);
             const res = await fetch(`${API_URL}/token`, { method: 'POST', body: fd });
-            if(!res.ok) throw new Error();
             const data = await res.json();
+            if(!res.ok) throw new Error('Erreur login');
             
-            localStorage.setItem('token', data.access_token);
-            localStorage.setItem('user', JSON.stringify({id: data.user_id, username: data.username}));
+            localStorage.setItem('mj_token', data.access_token);
+            localStorage.setItem('mj_user', JSON.stringify({id: data.user_id, username: data.username}));
             location.reload();
-        } catch(e) { ui.toast('Erreur de connexion', true); }
+        } catch(e) { ui.toast('Identifiants incorrects', 'error'); }
     },
 
     register: async () => {
-        const u = document.getElementById('reg-user').value;
-        const p = document.getElementById('reg-pass').value;
-        const e = document.getElementById('reg-email').value;
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const e = document.getElementById('email').value;
         
         try {
             const res = await fetch(`${API_URL}/api/users/register`, {
@@ -111,10 +122,10 @@ const app = {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({username: u, password: p, email: e || null})
             });
-            if(!res.ok) throw new Error((await res.json()).detail || 'Erreur');
+            if(!res.ok) throw new Error('Erreur inscription');
             ui.toast('Compte créé ! Connectez-vous.');
-            ui.toggleAuth('login');
-        } catch(err) { ui.toast(err.message, true); }
+            ui.toggleAuthMode();
+        } catch(e) { ui.toast('Erreur création compte', 'error'); }
     },
 
     logout: () => {
@@ -122,285 +133,270 @@ const app = {
         location.reload();
     },
 
-    // --- FEED & VIDÉOS ---
+    // FEED & VIDEO LOGIC
     loadFeed: async () => {
-        const container = document.getElementById('feed-container');
-        if(container.children.length > 0) return; // Évite rechargement inutile
-        
-        try {
-            document.getElementById('feed-loader').classList.remove('hidden');
-            const res = await fetch(`${API_URL}/api/feed`, { headers: {'Authorization': `Bearer ${state.token}`} });
-            const videos = await res.json();
-            document.getElementById('feed-loader').classList.add('hidden');
+        const container = document.getElementById('video-scroller');
+        if(container.children.length > 1) return; // Prevent reload if loaded
 
+        try {
+            const videos = await api(`/api/feed?limit=10`);
             container.innerHTML = videos.map(v => `
-                <div class="video-card">
-                    <video class="video-player" controls poster="${v.thumbnail_url}" playsinline>
-                        <source src="${v.video_url}" type="video/mp4">
-                    </video>
-                    <div class="video-info">
-                        <strong>@${v.username}</strong>
-                        <p>${v.description}</p>
-                        <div class="video-stats">
-                            <span>❤️ ${v.likes}</span>
-                            <span>👁️ ${v.views}</span>
-                            <span>📅 ${new Date(v.created_at).toLocaleDateString()}</span>
+                <div class="video-snap-item">
+                    <video class="video-player" src="${v.video_url}" loop playsinline poster="${v.thumbnail_url}" onclick="app.togglePlay(this)"></video>
+                    <div class="video-overlay">
+                        <div class="meta-username">@${v.username}</div>
+                        <div class="meta-desc">${v.description}</div>
+                    </div>
+                    <div class="video-sidebar">
+                        <div class="avatar-container" onclick="app.viewProfile('${v.user_id}')">
+                            <img src="${v.avatar_url || 'https://via.placeholder.com/50'}" style="width:45px; height:45px; border-radius:50%; border:2px solid white;">
+                        </div>
+                        <div class="action-btn" onclick="app.likeVideo(this)">
+                            <div class="action-icon like-heart"><i class="fas fa-heart"></i></div>
+                            <span>${v.likes}</span>
+                        </div>
+                        <div class="action-btn">
+                            <div class="action-icon"><i class="fas fa-comment-dots"></i></div>
+                            <span>0</span>
                         </div>
                     </div>
                 </div>
             `).join('');
+            app.playVisibleVideo();
         } catch(e) { console.error(e); }
     },
 
-    // --- UPLOAD ---
+    handleScroll: () => {
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(app.playVisibleVideo, 100);
+    },
+
+    playVisibleVideo: () => {
+        const container = document.getElementById('video-scroller');
+        const videos = document.querySelectorAll('.video-player');
+        
+        videos.forEach(v => {
+            const rect = v.getBoundingClientRect();
+            // Si la vidéo est principalement visible
+            if (rect.top >= -100 && rect.bottom <= (window.innerHeight + 100)) {
+                v.play().catch(e => console.log('Autoplay blocked'));
+            } else {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
+    },
+
+    pauseAllVideos: () => document.querySelectorAll('video').forEach(v => v.pause()),
+    
+    togglePlay: (video) => video.paused ? video.play() : video.pause(),
+
+    likeVideo: (el) => {
+        const icon = el.querySelector('.like-heart');
+        icon.classList.toggle('active');
+        // Animation simple (Le backend n'a pas encore de endpoint like dédié dans le snippet, juste visuel ici)
+    },
+
+    // UPLOAD
     uploadVideo: async () => {
         const file = document.getElementById('video-file').files[0];
         const desc = document.getElementById('video-desc').value;
-        if(!file) return ui.toast('Sélectionnez une vidéo', true);
+        const isPublic = document.getElementById('is-public').checked;
+        
+        if(!file) return ui.toast('Sélectionnez une vidéo', 'error');
 
-        const btn = document.getElementById('btn-upload');
-        btn.disabled = true;
-        btn.textContent = "Publication en cours... (Patientez)";
+        document.getElementById('upload-progress').classList.remove('hidden');
+        const bar = document.querySelector('.fill');
+        bar.style.width = '50%'; // Fake progress pour UX
 
         const fd = new FormData();
         fd.append('video', file);
         fd.append('description', desc);
-        fd.append('is_public', document.getElementById('video-public').checked);
+        fd.append('is_public', isPublic);
 
         try {
-            const res = await fetch(`${API_URL}/api/videos/upload`, {
-                method: 'POST',
-                headers: {'Authorization': `Bearer ${state.token}`},
-                body: fd
-            });
-            if(!res.ok) throw new Error('Fichier trop lourd ou erreur serveur');
-            
-            ui.toast('Vidéo publiée avec succès !');
-            document.getElementById('video-file').value = '';
-            document.getElementById('video-desc').value = '';
-            ui.showSection('feed');
-            app.loadFeed(); // Recharger le feed
-        } catch(e) { 
-            ui.toast(e.message, true); 
+            await api('/api/videos/upload', { method: 'POST', body: fd });
+            bar.style.width = '100%';
+            ui.toast('Vidéo publiée !');
+            ui.closeModal('upload-modal');
+            app.loadFeed(); // Reload feed
+        } catch(e) {
+            ui.toast('Erreur upload', 'error');
         } finally {
-            btn.disabled = false;
-            btn.textContent = "Publier";
+            document.getElementById('upload-progress').classList.add('hidden');
+            bar.style.width = '0%';
         }
     },
 
-    // --- CHAT & WEBSOCKET ---
-    connectWS: () => {
-        if(!state.user) return;
-        state.socket = new WebSocket(`${WS_URL}/${state.user.id}`);
-        
-        state.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'new_message') {
-                if (state.activeChatId === data.sender_id) {
-                    app.appendMessage(data, 'received');
-                } else {
-                    ui.toast(`Message de ${data.sender_username}`);
-                    app.loadNotifications();
-                }
-            } else if (data.type === 'notification') {
-                app.loadNotifications();
-            }
-        };
-        
-        state.socket.onclose = () => setTimeout(app.connectWS, 3000); // Reconnexion auto
-    },
-
-    loadConversations: async () => {
-        const res = await fetch(`${API_URL}/api/messages/conversations`, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const convs = await res.json();
-        
-        document.getElementById('conversations-list').innerHTML = convs.map(c => `
-            <div class="user-row" onclick="app.openChat('${c.user_id}', '${c.username}')" style="padding: 15px; cursor:pointer;">
-                <img src="${c.avatar_url || 'https://via.placeholder.com/50'}" class="avatar-circle">
-                <div style="flex:1">
-                    <div style="font-weight:bold; display:flex; justify-content:space-between;">
-                        ${c.username}
-                        ${c.is_online ? '<span style="color:#00d26a; font-size:0.8rem">●</span>' : ''}
-                    </div>
-                    <div style="color:#888; font-size:0.9rem;">
-                        ${c.unread_count > 0 ? `<b>${c.last_message} (${c.unread_count})</b>` : c.last_message}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    },
-
-    openChat: async (userId, username) => {
-        state.activeChatId = userId;
-        document.getElementById('chat-target-username').textContent = username;
-        document.getElementById('chat-view').classList.remove('hidden');
-        document.getElementById('messages-container').innerHTML = '<div class="spinner small"></div>';
-        
-        const res = await fetch(`${API_URL}/api/messages/${userId}?limit=50`, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const msgs = await res.json();
-        
-        const container = document.getElementById('messages-container');
-        container.innerHTML = '';
-        msgs.forEach(m => app.appendMessage(m, m.sender_id === state.user.id ? 'sent' : 'received'));
-        app.scrollToBottom();
-    },
-
-    sendMessage: async () => {
-        const input = document.getElementById('msg-input');
-        const txt = input.value.trim();
-        if(!txt || !state.activeChatId) return;
-
-        // Envoi optimiste (affichage immédiat)
-        app.appendMessage({content: txt}, 'sent');
-        input.value = '';
-        app.scrollToBottom();
-
-        try {
-            await fetch(`${API_URL}/api/messages/send`, {
-                method: 'POST',
-                headers: {'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json'},
-                body: JSON.stringify({receiver_id: state.activeChatId, content: txt})
-            });
-        } catch(e) { ui.toast('Erreur envoi', true); }
-    },
-
-    appendMessage: (msg, type) => {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.textContent = msg.content;
-        document.getElementById('messages-container').appendChild(div);
-        app.scrollToBottom();
-    },
-
-    scrollToBottom: () => {
-        const c = document.getElementById('messages-container');
-        c.scrollTop = c.scrollHeight;
-    },
-
-    // --- LIVES ---
-    startLiveConfig: async () => {
-        const title = prompt("Titre du live ?");
-        if(!title) return;
-        
-        try {
-            const res = await fetch(`${API_URL}/api/lives/start`, {
-                method: 'POST',
-                headers: {'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json'},
-                body: JSON.stringify({title: title, is_private: false})
-            });
-            const data = await res.json();
-            
-            document.getElementById('stream-key-display').value = data.stream_key;
-            document.getElementById('live-modal').classList.remove('hidden');
-            app.loadLives();
-        } catch(e) { ui.toast('Erreur création live', true); }
-    },
-
+    // LIVES
     loadLives: async () => {
-        const res = await fetch(`${API_URL}/api/lives/active`, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const lives = await res.json();
-        const container = document.getElementById('lives-container');
+        const lives = await api('/api/lives/active');
+        const grid = document.getElementById('lives-grid');
         
         if(lives.length === 0) {
-            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666">Aucun live en cours</p>';
+            grid.innerHTML = '<p style="color:#666; width:200%;">Aucun live en cours</p>';
             return;
         }
 
-        container.innerHTML = lives.map(l => `
-            <div class="video-card">
-                <div style="background:black; height:200px; display:flex; align-items:center; justify-content:center; color:white;">
-                    🔴 LIVE - ${l.viewer_count} spectateurs
-                </div>
-                <div class="video-info">
-                    <strong>${l.title}</strong> par ${l.username}
-                </div>
+        grid.innerHTML = lives.map(l => `
+            <div class="live-card" onclick="app.watchLive('${l.stream_key}', '${l.id}')">
+                <img src="${l.thumbnail_url || 'https://via.placeholder.com/200'}" class="live-thumb">
+                <div class="live-badge-card">LIVE</div>
+                <div style="position:absolute; bottom:10px; left:10px; font-weight:bold;">${l.title}</div>
             </div>
         `).join('');
     },
 
-    // --- RECHERCHE ---
-    search: async (query) => {
-        if(query.length < 2) return;
-        const res = await fetch(`${API_URL}/api/search?q=${query}&type=users`, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const users = await res.json();
+    watchLive: (key, id) => {
+        const video = document.getElementById('main-live-video');
+        const hlsUrl = `${API_URL}/live/${key}/index.m3u8`; // URL HLS générée par le serveur
+
+        document.getElementById('live-player-overlay').classList.remove('hidden');
         
-        document.getElementById('search-results').innerHTML = users.map(u => `
-            <div class="user-row" onclick="app.visitProfile('${u.id}')">
-                <img src="${u.avatar_url || 'https://via.placeholder.com/40'}" class="avatar-circle">
-                <div>
-                    <strong>${u.username}</strong>
-                    <div style="font-size:0.8rem; color:#888">${u.bio || ''}</div>
-                </div>
-            </div>
-        `).join('');
+        if (Hls.isSupported()) {
+            state.hls = new Hls();
+            state.hls.loadSource(hlsUrl);
+            state.hls.attachMedia(video);
+            state.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsUrl;
+            video.addEventListener('loadedmetadata', () => video.play());
+        }
+        
+        // Join socket room for chat
+        state.socket.send(JSON.stringify({ type: 'join_live', live_id: id }));
+        state.activeLiveId = id;
     },
 
-    // --- NOTIFICATIONS ---
-    loadNotifications: async () => {
-        const res = await fetch(`${API_URL}/api/notifications?limit=20`, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const notifs = await res.json();
-        
-        // Update badge
-        const unread = notifs.filter(n => !n.read).length;
-        const badge = document.getElementById('notif-count');
-        badge.textContent = unread;
-        badge.classList.toggle('hidden', unread === 0);
-
-        document.getElementById('notif-list').innerHTML = notifs.map(n => `
-            <div class="user-row" style="opacity: ${n.read ? 0.5 : 1}">
-                <img src="${n.from_avatar || 'https://via.placeholder.com/40'}" class="avatar-circle">
-                <div>
-                    <div>${n.message}</div>
-                    <small style="color:#666">${new Date(n.created_at).toLocaleTimeString()}</small>
-                </div>
-            </div>
-        `).join('');
-        
-        // Mark all as read after opening
-        if(unread > 0 && document.getElementById('notifications-section').classList.contains('active-section')) {
-            fetch(`${API_URL}/api/notifications/read-all`, { method:'POST', headers: {'Authorization': `Bearer ${state.token}`} });
+    sendLiveComment: () => {
+        const inp = document.getElementById('live-comment-input');
+        if(inp.value && state.activeLiveId) {
+            state.socket.send(JSON.stringify({
+                type: 'live_comment',
+                live_id: state.activeLiveId,
+                comment: inp.value
+            }));
+            inp.value = '';
         }
     },
-    
-    // --- PROFILE ---
-    loadProfile: async (userId) => {
-        const url = userId === 'me' ? `${API_URL}/api/users/me` : `${API_URL}/api/users/${userId}`;
-        const res = await fetch(url, { headers: {'Authorization': `Bearer ${state.token}`} });
-        const p = await res.json();
+
+    // PROFILE
+    loadProfile: async (id = 'me') => {
+        const p = await api(id === 'me' ? '/api/users/me' : `/api/users/${id}`);
+        const isMe = id === 'me' || p.id === state.user.id;
         
-        let html = `
-            <div style="text-align:center; padding:20px;">
-                <img src="${p.avatar_url || 'https://via.placeholder.com/100'}" style="width:100px; height:100px; border-radius:50%; border:2px solid var(--primary);">
-                <h2 class="mt-20">@${p.username}</h2>
-                <p>${p.bio || 'Pas de bio'}</p>
-                <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
-                    <div><b>${p.followers_count}</b><br><small>Abonnés</small></div>
-                    <div><b>${p.following_count}</b><br><small>Suivis</small></div>
-                    <div><b>${p.videos_count}</b><br><small>Vidéos</small></div>
+        const html = `
+            <div class="profile-header">
+                <img src="${p.avatar_url || 'https://via.placeholder.com/150'}" class="profile-avatar">
+                <h2>@${p.username}</h2>
+                <p>${p.bio || 'Aucune bio.'}</p>
+                <div class="stats-row">
+                    <div class="stat-item"><span class="stat-num">${p.followers_count}</span><span class="stat-label">Abonnés</span></div>
+                    <div class="stat-item"><span class="stat-num">${p.following_count}</span><span class="stat-label">Abonnements</span></div>
+                    <div class="stat-item"><span class="stat-num">${p.likes_received}</span><span class="stat-label">J'aime</span></div>
                 </div>
+                ${isMe 
+                    ? `<button class="btn-outline" onclick="ui.openModal('edit-profile-modal')">Modifier le profil</button>
+                       <button class="btn-outline" style="border-color:#ff3b30; color:#ff3b30; margin-left:10px" onclick="app.logout()">Déconnexion</button>`
+                    : `<button class="btn-main" style="width:auto; padding:8px 30px" onclick="app.follow('${p.id}')">S'abonner</button>`
+                }
+            </div>
         `;
+        document.getElementById(isMe ? 'my-profile-container' : 'my-profile-container').innerHTML = html; 
+        // Note: For full app, separate 'view profile' screen is needed.
+    },
+
+    updateProfile: async () => {
+        const bio = document.getElementById('edit-bio').value;
+        const avatar = document.getElementById('avatar-file').files[0];
         
-        if (userId !== 'me' && state.user.id !== p.id) {
-            html += `<button onclick="app.follow('${p.id}')" class="btn-primary" style="width:auto; padding:10px 30px;">
-                ${p.is_following ? 'Se désabonner' : "S'abonner"}
-            </button>`;
+        const fd = new FormData();
+        if(bio) fd.append('bio', bio);
+        if(avatar) fd.append('avatar', avatar);
+        
+        await api('/api/users/me', { method: 'PUT', body: fd });
+        ui.closeModal('edit-profile-modal');
+        app.loadProfile();
+    },
+
+    // CHAT & SOCKET
+    connectWS: () => {
+        state.socket = new WebSocket(`${WS_URL}/${state.user.id}`);
+        state.socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if(data.type === 'new_message') {
+                if(state.activeChat === data.sender_id) app.appendMsg(data, 'received');
+                else ui.toast(`Message de ${data.sender_username}`);
+            } else if (data.type === 'live_comment') {
+                const chatDiv = document.getElementById('live-chat-overlay');
+                chatDiv.innerHTML += `<div class="live-chat-msg"><b>${data.comment.username}:</b> ${data.comment.message}</div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            }
+        };
+    },
+    
+    loadConversations: async () => {
+        const convs = await api('/api/messages/conversations');
+        document.getElementById('conversations-list').innerHTML = convs.map(c => `
+            <div onclick="app.openChat('${c.user_id}', '${c.username}', '${c.avatar_url}')" style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
+                <img src="${c.avatar_url || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:50%; margin-right:15px;">
+                <div style="flex:1;">
+                    <div style="font-weight:bold;">${c.username}</div>
+                    <div style="color:#888; font-size:0.9rem;">${c.last_message}</div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    openChat: async (id, name, avatar) => {
+        state.activeChat = id;
+        document.getElementById('chat-header-username').innerText = name;
+        document.getElementById('chat-header-avatar').src = avatar || 'https://via.placeholder.com/40';
+        document.getElementById('chat-view').classList.remove('hidden');
+        
+        const msgs = await api(`/api/messages/${id}`);
+        const box = document.getElementById('messages-container');
+        box.innerHTML = '';
+        msgs.forEach(m => app.appendMsg(m, m.sender_id === state.user.id ? 'sent' : 'received'));
+    },
+
+    sendMessage: async () => {
+        const input = document.getElementById('message-input');
+        const txt = input.value;
+        if(!txt) return;
+        
+        app.appendMsg({content: txt}, 'sent');
+        input.value = '';
+        
+        await api('/api/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({receiver_id: state.activeChat, content: txt})
+        });
+    },
+
+    appendMsg: (msg, type) => {
+        const box = document.getElementById('messages-container');
+        box.innerHTML += `<div class="msg-bubble ${type}">${msg.content}</div>`;
+        box.scrollTop = box.scrollHeight;
+    },
+
+    startLiveSetup: async () => {
+        const title = prompt('Titre du live ?');
+        if(title) {
+            const res = await api('/api/lives/start', { 
+                method: 'POST', 
+                body: JSON.stringify({title, is_private: false}) 
+            });
+            alert(`Stream Key: ${res.stream_key}\nServer: rtmp://mj-hub.onrender.com/live`);
         }
-        
-        html += `</div>`;
-        document.getElementById('profile-content').innerHTML = html;
-    },
-    
-    follow: async (id) => {
-        await fetch(`${API_URL}/api/users/${id}/follow`, { method: 'POST', headers: {'Authorization': `Bearer ${state.token}`} });
-        app.loadProfile(id); // Reload to update button
-    },
-    
-    visitProfile: (id) => {
-        ui.showSection('profile');
-        app.loadProfile(id);
     }
 };
 
-// Démarrage
+ui.closeChat = () => document.getElementById('chat-view').classList.add('hidden');
+ui.closeLive = () => {
+    document.getElementById('live-player-overlay').classList.add('hidden');
+    if(state.hls) state.hls.destroy();
+    document.getElementById('main-live-video').pause();
+};
+
 document.addEventListener('DOMContentLoaded', app.init);
